@@ -88,3 +88,54 @@ type LayerType
         return this
     end
 end
+
+layerType = LayerType()
+
+type LayerOutput
+    name
+    layer_type
+    size
+    parents
+    activations
+    num_filters
+    img_norm_type
+    outputs
+    reverse
+
+    function LayerOutput(name,
+                        layer_type;
+                        parents=nothing,
+                        activations=nothing,
+                        num_filters=nothing,
+                        img_norm_type=nothing,
+                        size=nothing,
+                        outputs=nothing,
+                        reverse=nothing)
+
+        @assert isa(name, String)
+        @assert isa(layer_type, String)
+        @assert !isa(size, Void)
+        @assert layerType.is_layer_type(layer_type)
+
+        this = new()
+
+        this.name = name
+        this.layer_type = layer_type
+        if !isa(parents, Void) && !isa(parents, Array)
+            this.parents = [parents]
+        else
+            this.parents = []
+        end
+        this.activations = activations
+        this.num_filters = num_filters
+        this.img_norm_type = img_norm_type
+        this.size = size
+        if isa(outputs, Void)
+            outputs = ["default"]
+        end
+        this.outputs = outputs
+        this.reverse = reverse
+
+        return this
+    end
+end
