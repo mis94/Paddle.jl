@@ -61,6 +61,47 @@ type AdamOptimizer <: BaseSGDOptimizer
     end
 end
 
+
+type AdamxOptimizer <: BaseSGDOptimizer
+    beta1
+    beta2
+    extra_settings::Function
+    to_setting_kwargs::Function
+    #TODO is_support_sparse::Function
+    function AdamxOptimizer(beta1, beta2)
+        this = new()
+        this.beta1 = beta1
+        this.beta2 = beta2
+        this.extra_settings = function ()
+        end
+
+        this.to_setting_kwargs = function()
+            return Dict("learning_method" => "adamx",
+                        "adam_beta1" => this.beta1,
+                        "adam_beta2" => this.beta2)
+        end
+    
+        return this
+    end
+end
+
+type AdaGradOptimizer <: BaseSGDOptimizer
+    extra_settings::Function
+    to_setting_kwargs::Function
+    #TODO is_support_sparse::Function
+    function AdaGradOptimizer()
+        this = new()
+        this.extra_settings = function ()
+        end
+
+        this.to_setting_kwargs = function()
+            return Dict("learning_method" => "adagrad")
+        end
+    
+        return this
+    end
+end
+
 #TODO delete this
 function basic_tests()
     # ================= MomentumOptimizer =================
@@ -82,6 +123,20 @@ function basic_tests()
 
     x = AdamOptimizer()
     println("beta1: $(x.beta1), beta2: $(x.beta2), epsilon: $(x.epsilon)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println(y["learning_method"])
+
+    # ================= AdamOptimizer =================
+    x = AdamxOptimizer(10, 20);
+    println("beta1: $(x.beta1), beta2: $(x.beta2)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println(y["learning_method"])
+
+    # ================= AdaGradOptimizer =================
+    x = AdaGradOptimizer();
+    println("AdaGradOptimizer: OK!")
     x.extra_settings()
     y = x.to_setting_kwargs()
     println(y["learning_method"])
