@@ -102,6 +102,30 @@ type AdaGradOptimizer <: BaseSGDOptimizer
     end
 end
 
+type RMSPropOptimizer <: BaseSGDOptimizer
+    rho
+    epsilon
+    extra_settings::Function
+    to_setting_kwargs::Function
+    #TODO is_support_sparse::Function
+    function RMSPropOptimizer(rho=0.95, epsilon=1e-6)
+        this = new()
+        this.rho = rho
+        this.epsilon = epsilon
+        this.extra_settings = function ()
+        end
+
+        this.to_setting_kwargs = function()
+            return Dict("learning_method" => "rmsprop",
+                        "ada_rou" => this.rho,
+                        "ada_epsilon" => this.epsilon)
+        end
+    
+        return this
+    end
+end
+
+
 #TODO delete this
 function basic_tests()
     # ================= MomentumOptimizer =================
@@ -141,6 +165,18 @@ function basic_tests()
     y = x.to_setting_kwargs()
     println(y["learning_method"])
 
+    # ================= RMSPropOptimizer =================
+    x = RMSPropOptimizer(10, 20);
+    println("rho: $(x.rho), epsilon: $(x.epsilon)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
+
+    x = RMSPropOptimizer();
+    println("rho: $(x.rho), epsilon: $(x.epsilon)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
     
 end
 
