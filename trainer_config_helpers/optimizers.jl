@@ -102,6 +102,7 @@ type AdaGradOptimizer <: BaseSGDOptimizer
     end
 end
 
+
 type RMSPropOptimizer <: BaseSGDOptimizer
     rho
     epsilon
@@ -125,6 +126,28 @@ type RMSPropOptimizer <: BaseSGDOptimizer
     end
 end
 
+type DecayedAdaGradOptimizer <: BaseSGDOptimizer
+    rho
+    epsilon
+    extra_settings::Function
+    to_setting_kwargs::Function
+    #TODO is_support_sparse::Function
+    function DecayedAdaGradOptimizer(rho=0.95, epsilon=1e-6)
+        this = new()
+        this.rho = rho
+        this.epsilon = epsilon
+        this.extra_settings = function ()
+        end
+
+        this.to_setting_kwargs = function()
+            return Dict("learning_method" => "decayed_adagrad",
+                        "ada_rou" => this.rho,
+                        "ada_epsilon" => this.epsilon)
+        end
+    
+        return this
+    end
+end
 
 type AdaDeltaOptimizer <: BaseSGDOptimizer
     rho
@@ -144,11 +167,10 @@ type AdaDeltaOptimizer <: BaseSGDOptimizer
                         "ada_rou" => this.rho,
                         "ada_epsilon" => this.epsilon)
         end
-    
+        
         return this
     end
 end
-
 
 #TODO delete this
 function basic_tests()
@@ -161,6 +183,7 @@ function basic_tests()
     x = MomentumOptimizer()
     println("momentum: $(x.momentum), sparse: $(x.sparse)")
     println(x.to_setting_kwargs()["learning_method"])
+    println("\n =========================== \n")
 
     # ================= AdamOptimizer =================
     x = AdamOptimizer(10, 20, 30);
@@ -174,13 +197,15 @@ function basic_tests()
     x.extra_settings()
     y = x.to_setting_kwargs()
     println(y["learning_method"])
-
-    # ================= AdamOptimizer =================
+    println("\n =========================== \n")
+    
+    # ================= AdamaxOptimizer =================
     x = AdamxOptimizer(10, 20);
     println("beta1: $(x.beta1), beta2: $(x.beta2)")
     x.extra_settings()
     y = x.to_setting_kwargs()
     println(y["learning_method"])
+    println("\n =========================== \n")
 
     # ================= AdaGradOptimizer =================
     x = AdaGradOptimizer();
@@ -188,6 +213,7 @@ function basic_tests()
     x.extra_settings()
     y = x.to_setting_kwargs()
     println(y["learning_method"])
+    println("\n =========================== \n")
 
     # ================= RMSPropOptimizer =================
     x = RMSPropOptimizer(10, 20);
@@ -201,8 +227,22 @@ function basic_tests()
     x.extra_settings()
     y = x.to_setting_kwargs()
     println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
-    
+    println("\n =========================== \n")
 
+    # ================= DecayedAdaGradOptimizer =================
+    x = DecayedAdaGradOptimizer(10, 20);
+    println("rho: $(x.rho), epsilon: $(x.epsilon)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
+
+    x = DecayedAdaGradOptimizer();
+    println("rho: $(x.rho), epsilon: $(x.epsilon)")
+    x.extra_settings()
+    y = x.to_setting_kwargs()
+    println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
+    println("\n =========================== \n")
+    
     # ================= AdaDeltaOptimizer =================
     x = AdaDeltaOptimizer(10, 20);
     println("rho: $(x.rho), epsilon: $(x.epsilon)")
