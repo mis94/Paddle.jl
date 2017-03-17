@@ -204,6 +204,36 @@ type L2Regularization <: BaseRegularization
     end
 end
 
+type ModelAverage <: Optimizer
+    average_window
+    max_average_window
+    do_average_in_cpu
+    extra_settings::Function
+    to_setting_kwargs::Function
+
+    function ModelAverage(average_window,
+                 max_average_window=nothing,
+                 do_average_in_cpu=false)
+        this = new()
+        this.average_window = average_window
+        this.max_average_window = max_average_window
+        this.do_average_in_cpu = do_average_in_cpu
+
+        this.to_setting_kwargs = function ()
+            return Dict(
+                "average_window" => this.average_window,
+                "max_average_window" => this.max_average_window,
+                "do_average_in_cpu" => this.do_average_in_cpu
+            )
+        end
+
+        this.extra_settings = function ()
+        end
+
+        return this
+    end
+end
+
 #TODO delete this
 function basic_tests_BaseSGDOptimizer()
     # ================= MomentumOptimizer =================
@@ -298,4 +328,18 @@ function basic_tests_BaseRegularization()
     y = x.to_setting_kwargs()
     println(y["l2weight"])
 end
-basic_tests_BaseRegularization()
+
+function basic_tests_Optimizer()
+    x = ModelAverage(10, 20, true)
+    println("avg: $(x.average_window), mx: $(x.max_average_window), do: $(x.do_average_in_cpu)")
+    println(x.to_setting_kwargs())
+    x.extra_settings()
+
+
+    x = ModelAverage(10)
+    println("avg: $(x.average_window), mx: $(x.max_average_window), do: $(x.do_average_in_cpu)")
+    println(x.to_setting_kwargs())
+    x.extra_settings()
+end
+
+basic_tests_Optimizer()
