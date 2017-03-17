@@ -172,8 +172,40 @@ type AdaDeltaOptimizer <: BaseSGDOptimizer
     end
 end
 
+abstract BaseRegularization <: Optimizer
+
+type L2Regularization <: BaseRegularization
+    algorithm
+    learning_method
+    decay_rate
+    extra_settings::Function
+    to_setting_kwargs::Function
+
+    function L2Regularization(rate)
+        this = new()
+        this.algorithm = ""
+        this.learning_method = ""
+        this.decay_rate = rate
+        this.to_setting_kwargs = function ()
+            if this.algorithm == "owlqn"
+                return Dict("l2weight" => this.decay_rate)
+            else
+                return Dict()
+            end
+        end
+
+        this.extra_settings = function ()
+            if this.algorithm == "sgd" || this.algorithm == "async_sgd"
+                #TODO call default_decay_rate function in config_parser file
+            end
+        end
+
+        return this
+    end
+end
+
 #TODO delete this
-function basic_tests()
+function basic_tests_BaseSGDOptimizer()
     # ================= MomentumOptimizer =================
     x = MomentumOptimizer(10, true)
     println("momentum: $(x.momentum), sparse: $(x.sparse)")
@@ -242,7 +274,7 @@ function basic_tests()
     y = x.to_setting_kwargs()
     println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
     println("\n =========================== \n")
-    
+
     # ================= AdaDeltaOptimizer =================
     x = AdaDeltaOptimizer(10, 20);
     println("rho: $(x.rho), epsilon: $(x.epsilon)")
@@ -258,4 +290,12 @@ function basic_tests()
     
 end
 
-basic_tests()
+function basic_tests_BaseRegularization()
+    # ================= L2Regularization =================
+    x = L2Regularization(0.5)
+    println("algorithm: $(x.algorithm), learning_method: $(x.learning_method), rate: $(x.decay_rate)")
+    x.algorithm = "owlqn"
+    y = x.to_setting_kwargs()
+    println(y["l2weight"])
+end
+basic_tests_BaseRegularization()
