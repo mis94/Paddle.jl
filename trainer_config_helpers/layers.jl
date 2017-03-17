@@ -96,7 +96,7 @@ type LayerOutput
     layer_type
     size
     parents
-    activations
+    activation
     num_filters
     img_norm_type
     outputs
@@ -105,7 +105,7 @@ type LayerOutput
     function LayerOutput(name,
                         layer_type;
                         parents=nothing,
-                        activations=nothing,
+                        activation=nothing,
                         num_filters=nothing,
                         img_norm_type=nothing,
                         size=nothing,
@@ -126,7 +126,7 @@ type LayerOutput
         else
             this.parents = []
         end
-        this.activations = activations
+        this.activation = activation
         this.num_filters = num_filters
         this.img_norm_type = img_norm_type
         this.size = size
@@ -152,22 +152,44 @@ function layerSupport(methodName, args...; kwargs...)
 end
 
 function dataLayer(name, size; height=nothing, width=nothing, layer_attr=nothing)
-    layerSupport(string(data_layer), name, size, height, width, layer_attr, DEVICE="device")
+    layerSupport(string(dataLayer), name, size, height, width, layer_attr, device="device")
     # TODO: call Layer function in config_parser
 
     return LayerOutput(name, "data", size=size)
 end
 
+function fcLayer(input,
+                 size,
+                 act=nothing,
+                 name=nothing,
+                 param_attr=nothing,
+                 bias_attr=nothing,
+                 layer_attr=nothing)
 
+    layerSupport(string(fcLayer), input, size, act, name, param_attr, bias_attr, layer_attr, 
+        errorClipping = "error_clipping_threshold", dropout = "drop_rate")
 
+    if isa(input, LayerOutput)
+        input = [input]
+        @assert !isa(param_attr, Array)
+        @assert !isa(param_attr, Tuple)
+        param_attr = [param_attr]
+    else
+        if isa(param_attr, Array) || isa(param_attr, Tuple)
+            @assert length(input) == length(param_attr)
+        else
+            deepCopyOfParamAttr = deepcopy(param_attr)
+            param_attr = []
+            for i 1:length(input)
+                push!(param_attr, deepCopyOfParamAttr)
+            end
+        end
+    end
 
+    @assert isa(input, Array) || isa(input, Tuple)
 
+    # TODO: call Layer function in config_parser
 
+    return LayerOutput(name, "fc", activation=act, size=size)
 
-
-
-
-
-
-
-
+end
