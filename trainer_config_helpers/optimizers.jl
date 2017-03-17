@@ -19,7 +19,7 @@ type MomentumOptimizer <: BaseSGDOptimizer
         this.sparse = sparse
 
         this.extra_settings = function ()
-            #TODO call default_momentum function in config_parser file
+            #TODO default_momentum(self.momentum)
         end
 
         this.to_setting_kwargs = function ()
@@ -196,7 +196,7 @@ type L2Regularization <: BaseRegularization
 
         this.extra_settings = function ()
             if this.algorithm == "sgd" || this.algorithm == "async_sgd"
-                #TODO call default_decay_rate function in config_parser file
+                #TODO default_decay_rate(self.decay_rate)
             end
         end
 
@@ -228,6 +228,27 @@ type ModelAverage <: Optimizer
         end
 
         this.extra_settings = function ()
+        end
+
+        return this
+    end
+end
+
+type GradientClippingThreshold <: Optimizer
+    threshold
+    extra_settings::Function
+    to_setting_kwargs::Function
+
+    function GradientClippingThreshold(threshold)
+        this = new()
+        this.threshold = threshold
+
+        this.to_setting_kwargs = function ()
+            return Dict()
+        end
+
+        this.extra_settings = function ()
+            #TODO default_gradient_clipping_threshold(self.threshold)
         end
 
         return this
@@ -330,14 +351,21 @@ function basic_tests_BaseRegularization()
 end
 
 function basic_tests_Optimizer()
+    # ================= ModelAverage =================
     x = ModelAverage(10, 20, true)
     println("avg: $(x.average_window), mx: $(x.max_average_window), do: $(x.do_average_in_cpu)")
     println(x.to_setting_kwargs())
     x.extra_settings()
 
-
     x = ModelAverage(10)
     println("avg: $(x.average_window), mx: $(x.max_average_window), do: $(x.do_average_in_cpu)")
+    println(x.to_setting_kwargs())
+    x.extra_settings()
+    println("\n =========================== \n")
+
+    # ================= GradientClippingThreshold =================
+    x = GradientClippingThreshold(10)
+    println("threshold: $(x.threshold)")
     println(x.to_setting_kwargs())
     x.extra_settings()
 end
