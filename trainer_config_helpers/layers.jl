@@ -139,3 +139,35 @@ type LayerOutput
         return this
     end
 end
+
+function layerSupport(methodName, args...; kwargs...)
+    for each in args
+        if isa(each, ExtraLayerAttribute)
+            for attr in kwargs
+                push!(each.attributesSet, join(["can", attr[2]], "_"))
+            end
+            each.check(methodName)
+        end
+    end
+end
+
+function dataLayer(name, size; height=nothing, width=nothing, layer_attr=nothing)
+    layerSupport(string(data_layer), name, size, height, width, layer_attr, DEVICE="device")
+    # TODO: call Layer function in config_parser
+
+    return LayerOutput(name, "data", size=size)
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
