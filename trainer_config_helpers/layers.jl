@@ -1,4 +1,6 @@
-# layers file
+#include("attrs.jl")
+#include("evaluators.jl")
+#include("config_parser.jl")
 
 type LayerType
     # layer type enumerations
@@ -191,5 +193,67 @@ function fcLayer(input,
     # TODO: call Layer function in config_parser
 
     return LayerOutput(name, "fc", activation=act, size=size)
-
 end
+
+function classificationCost(input,
+                            label,
+                            weight=nothing,
+                            name=nothing,
+                            evaluator=classification_error_evaluator,
+                            layer_attr=nothing)
+
+    layerSupport(string(classificationCost), input, label, weight, name, evaluator, layer_attr, 
+        device="device")
+    
+    @assert input.layer_type != "data"
+    @assert isa(input.activation, SoftmaxActivation)
+    @assert label.layer_type == "data"
+
+    ipts, parents = costInput(input, label, weight)
+
+    # TODO: call Layer function in config_parser
+
+    function addEvaluator(e)
+        @assert isa(e, Function)
+        # Some checking is done here in evaluators file, needs some discussion
+        e(string(evaluator), input=input, label=label, weight=weight)
+    end
+
+    if !isa(evaluator, Array) && !isa(evaluator, Tuple)
+        evaluator = [evaluator]
+    end
+
+    for(eachEvaluator in evaluator)
+        addEvaluator(eachEvaluator)
+    end
+
+    return LayerOutput(name, "cost", parents=parents, size=1)
+end
+
+function costInput(input, label, weight=nothing)
+    # TODO: ipts = [Input(input.name), Input(label.name)] implement Input in config_parser
+    parents = [input, label]
+    if !isa(weight, Void)
+        @assert weight.layer_type == "data"
+        # TODO: ipts.append(Input(weight.name))
+        push!(parents, weight)
+    end
+    #return ipts, parents
+end
+
+function maxidLayer(input, name=None, layer_attr=nothing)
+    @assert isa(input, LayerOutput)
+    # TODO: call Layer function in config_parser
+    l = nothing # this should be equal the returned value from Layer in config_parser
+    return LayerOutput(name=name, layer_type="maxid", parents=[input], size=l.config.size)
+end
+
+
+
+
+
+
+
+
+
+
