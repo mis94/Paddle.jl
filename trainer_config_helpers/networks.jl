@@ -1,21 +1,3 @@
-# def inputs(layers, *args):
-    # """
-    # Declare the inputs of network. The order of input should be as same as
-    # the data provider's return order.
-    #
-    # :param layers: Input Layers.
-    # :type layers: list|tuple|LayerOutput.
-    # :return:
-    # """
-#
-#     if isinstance(layers, LayerOutput) or isinstance(layers, basestring):
-#         layers = [layers]
-#     if len(args) != 0:
-#         layers.extend(args)
-#
-#     Inputs(*[l.name for l in layers])
-
-
 """
 Declare the inputs of network. The order of input should be as same as
 the data provider's return order.
@@ -42,4 +24,84 @@ function inputs(layers, args...)
     names = vcat(names, layer.name)
   end
   Inputs(names)
+end
+
+
+
+
+"""
+Declare the outputs of network. If user have not defined the inputs of
+network, this method will calculate the input order by dfs travel.
+
+:param layers: Output layers.
+:type layers: list|tuple|LayerOutput
+:return:
+"""
+function outputs(layers, args...)
+  function __dfs_travel__(layer, predicate = x -> x.layer_type == LayerType.DATA)
+    @assert typeof(layer)==LayerOutput @sprintf("layer is %s", layer)
+    retv = []
+    if layer.parents != nothing
+      for p in layer.parents
+        retv = vcat(__dfs_travel__(p, predicate))
+      end
+    end
+    if predicate(layer)
+      retv = vcat(retv, layer)
+    end
+    return retv
+  end
+
+  if typeof(layers) == LayerOutput
+    layers = [layers]
+  end
+  if length(args) != 0
+    layers = vcat(layers, args)
+  end
+  @assert length(layers) > 0
+
+  if HasInputsSet()
+    names = []
+    for layer in layers
+      names = vcat(names, layer.name)
+    end
+    return
+  end
+  if length(layers) != 1
+    logger.warning("`outputs` routine try to calculate network's, inputs and outputs order. It might not work well. Please see follow log carefully.")
+  end
+  inputs = []
+  outputs = []
+  for each_layer in layers
+    @assert typeof(each_layer) == LayerOutput
+    inputs = vcat(inputs, __dfs_travel__(each_layer))
+    outputs = vcat(outputs, __dfs_travel__(each_layer, x -> x.layer_type==LayerType.COST))
+  end
+  final_inputs = []
+  final_outputs = []
+
+  for each_input in inputs
+    @assert typeof(each_input) == LayerOutput
+    if !(each_input.name in final_inputs)
+      final_inputs = vcat(final_inputs, each_input.name)
+    end
+  end
+
+  for each_out in outputs
+    @assert typeof(each_out) == LayerOutput
+    if !(each_output.name in final_outputs)
+      final_outputs = vcat(final_outputs, each_output.name)
+    end
+  end
+
+  logger.info("The input order is [" * join(final_inputs, ", ") * "]")
+
+  if length(final_outputs) == 0
+    final_outputs = map(x->x.name, layers)
+  end
+
+  logger.info("The output order is [" * join(final_outputs, ", ") * "]")
+
+  Inputs(final_inputs)
+  Outputs(final_outputs)
 end
