@@ -24,7 +24,7 @@ _name_factories = []
 
 function reset_hook()
     for factory in _name_factories
-        factory.reset
+        factory.reset()
     end
 end
 
