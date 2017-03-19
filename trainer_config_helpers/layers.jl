@@ -1,6 +1,7 @@
 #include("attrs.jl")
 #include("evaluators.jl")
 #include("config_parser.jl")
+#include("default_decorators.jl")
 
 type LayerType
     # layer type enumerations
@@ -142,7 +143,7 @@ type LayerOutput
     end
 end
 
-function layerSupport(methodName, args...; kwargs...)
+function layer_support(methodName, args...; kwargs...)
     for each in args
         if isa(each, ExtraLayerAttribute)
             for attr in kwargs
@@ -153,23 +154,28 @@ function layerSupport(methodName, args...; kwargs...)
     end
 end
 
-function dataLayer(name, size; height=nothing, width=nothing, layer_attr=nothing)
-    layerSupport(string(dataLayer), name, size, height, width, layer_attr, device="device")
+function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothing)
+    layer_support(string(data_layer), name, size, height, width, layer_attr, device="device")
     # TODO: call Layer function in config_parser
 
     return LayerOutput(name, "data", size=size)
 end
 
-function fcLayer(input,
+function fc_layer(input,
                  size,
                  act=nothing,
                  name=nothing,
                  param_attr=nothing,
                  bias_attr=nothing,
                  layer_attr=nothing)
-
-    layerSupport(string(fcLayer), input, size, act, name, param_attr, bias_attr, layer_attr, 
+    
+    layer_support(string(fc_layer), input, size, act, name, param_attr, bias_attr, layer_attr, 
         errorClipping = "error_clipping_threshold", dropout = "drop_rate")
+
+    act = wrap_act_default(act)
+    bias_attr = wrap_bias_attr_default(bias_attr)
+    param_attr = wrap_param_attr_default(param_attr)
+    name = wrap_name_default(name, string(fc_layer))
 
     if isa(input, LayerOutput)
         input = [input]
@@ -202,18 +208,20 @@ function classificationCost(input,
                             evaluator=classification_error_evaluator,
                             layer_attr=nothing)
 
-    layerSupport(string(classificationCost), input, label, weight, name, evaluator, layer_attr, 
+    layer_support(string(classificationCost), input, label, weight, name, evaluator, layer_attr, 
         device="device")
+
+    name = wrap_name_default("cost", string(classificationCost))
     
     @assert input.layer_type != "data"
     @assert isa(input.activation, SoftmaxActivation)
     @assert label.layer_type == "data"
 
-    ipts, parents = costInput(input, label, weight)
+    ipts, parents = __cost_input__(input, label, weight)
 
     # TODO: call Layer function in config_parser
 
-    function addEvaluator(e)
+    function __add_evaluator__(e)
         @assert isa(e, Function)
         # Some checking is done here in evaluators file, needs some discussion
         e(string(evaluator), input=input, label=label, weight=weight)
@@ -224,13 +232,13 @@ function classificationCost(input,
     end
 
     for(eachEvaluator in evaluator)
-        addEvaluator(eachEvaluator)
+        __add_evaluator__(eachEvaluator)
     end
 
     return LayerOutput(name, "cost", parents=parents, size=1)
 end
 
-function costInput(input, label, weight=nothing)
+function __cost_input__(input, label, weight=nothing)
     # TODO: ipts = [Input(input.name), Input(label.name)] implement Input in config_parser
     parents = [input, label]
     if !isa(weight, Void)
@@ -241,19 +249,11 @@ function costInput(input, label, weight=nothing)
     #return ipts, parents
 end
 
-function maxidLayer(input, name=None, layer_attr=nothing)
+function maxid_layer(input, name=nothing, layer_attr=nothing)
+    name = wrap_name_default(name, string(maxid_layer))
+
     @assert isa(input, LayerOutput)
     # TODO: call Layer function in config_parser
     l = nothing # this should be equal the returned value from Layer in config_parser
     return LayerOutput(name=name, layer_type="maxid", parents=[input], size=l.config.size)
 end
-
-
-
-
-
-
-
-
-
-
