@@ -21,6 +21,7 @@ type LayerType
         push!(this.layersTypes, "seqfirstins")
         push!(this.layersTypes, "max")
         push!(this.layersTypes, "average")
+        push!(this.layersTypes, "cost")
         push!(this.layersTypes, "fc")
         push!(this.layersTypes, "cos_vm")
         push!(this.layersTypes, "cos")
