@@ -225,7 +225,7 @@ function classificationCost(input,
     function __add_evaluator__(e)
         @assert isa(e, Function)
         # Some checking is done here in evaluators file, needs some discussion
-        e(string(evaluator), input=input, label=label, weight=weight)
+        e(input, label, name=string(evaluator), weight=weight)
     end
 
     if !isa(evaluator, Array) && !isa(evaluator, Tuple)
