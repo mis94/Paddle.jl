@@ -1,54 +1,3 @@
-# def MakeLayerNameInSubmodel(name, submodel_name=None):
-#     global g_current_submodel
-#     global g_add_submodel_suffix
-#     if (submodel_name is None and not g_add_submodel_suffix and
-#             not g_current_submodel.is_recurrent_layer_group):
-#         return name
-#     if submodel_name is None:
-#         submodel_name = g_current_submodel.name
-#     return name + "@" + submodel_name
-#
-# # Check a condition derived config file
-# def config_assert(b, msg):
-#     if not b:
-#         logger.fatal(msg)
-#
-# # Initialize global variables. We use this function so that we can
-# # call parse_config() multiple times
-# def init_config_environment(
-#         g_default_momentum=None,
-#         g_default_decay_rate=None,
-#         g_default_initial_mean=0.,
-#         g_default_initial_std=0.01,
-#         g_default_num_batches_regularization=None,
-#         g_default_initial_strategy=0,
-#         g_default_initial_smart=False,
-#         g_default_gradient_clipping_threshold=None,
-#         g_default_device=None,
-#         g_default_update_hooks=None,
-#         g_default_compact_func=None,
-#         g_config=TrainerConfig(),
-#         g_layer_map={},
-#         g_parameter_map={},
-#         g_extended_config_funcs={},
-#
-#         # store command args of paddle_trainer
-#         g_command_config_args={},
-#
-#         # Used for PyDataProvider to avoid duplicate module name
-#         g_py_module_name_list=[],
-#         g_current_submodel=None,
-#         g_root_submodel=None,
-#         g_submodel_map={},
-#         g_submodel_stack=[],
-#         g_add_submodel_suffix=False, ):
-#
-#     for k, v in locals().iteritems():
-#         globals()[k] = copy.deepcopy(v)
-
-
-
-
 module globals
   # These includes are topologically sorted
   proto_path = dirname(Base.source_path()) * "/../proto.jl/"
@@ -135,6 +84,28 @@ module globals
     g_submodel_map                         =deepcopy(submodel_map)
     g_submodel_stack                       =deepcopy(submodel_stack)
     g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
-    end
+  end
+end
+
+
+function MakeLayerNameInSubmodel(name, submodel_name=nothing)
+  if is(submodel_name, nothing) && !globals.g_add_submodel_suffix && !globals.g_current_submodel.is_recurrent_layer_group
+    return name
+  end
+
+  if is(submodel_name, nothing)
+    submodel_name = globals.g_current_submodel.name
+  end
+
+  return name * "@" * submodel_name
+end
+
+
+
+function config_assert(b, msg)
+  if !b
+    #TODO: logger
+    # logger.fata(msg)
+    println(msg)
   end
 end
