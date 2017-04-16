@@ -1,3 +1,7 @@
+include(dirname(Base.source_path()) * "/../trainer/config_parser.jl")
+using globals
+
+
 """
 Declare the inputs of network. The order of input should be as same as
 the data provider's return order.
