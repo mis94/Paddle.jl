@@ -113,71 +113,28 @@ module globals
   add_submodel_suffix=false)
 
   #Parameter Assignments
-    if !is(default_momentum, nothing)
-      g_default_momentum                     =deepcopy(default_momentum)
-    end
-    if !is(default_decay_rate, nothing)
-      g_default_decay_rate                   =deepcopy(default_decay_rate)
-    end
-    if !is(default_initial_mean, nothing)
-      g_default_initial_mean                 =deepcopy(default_initial_mean)
-    end
-    if !is(default_initial_std, nothing)
-      g_default_initial_std                  =deepcopy(default_initial_std)
-    end
-    if !is(default_num_batches_regularization, nothing)
-      g_default_num_batches_regularization   =deepcopy(default_num_batches_regularization)
-    end
-    if !is(default_initial_strategy, nothing)
-      g_default_initial_strategy             =deepcopy(default_initial_strategy)
-    end
-    if !is(default_initial_smart, nothing)
-      g_default_initial_smart                =deepcopy(default_initial_smart)
-    end
-    if !is(default_gradient_clipping_threshold, nothing)
-      g_default_gradient_clipping_threshold  =deepcopy(default_gradient_clipping_threshold)
-    end
-    if !is(default_device, nothing)
-      g_default_device                       =deepcopy(default_device)
-    end
-    if !is(default_update_hooks, nothing)
-      g_default_update_hooks                 =deepcopy(default_update_hooks)
-    end
-    if !is(default_compact_func, nothing)
-      g_default_compact_func                 =deepcopy(default_compact_func)
-    end
-    if !is(config, nothing)
-      g_config                               =deepcopy(config)
-    end
-    if !is(layer_map, nothing)
-      g_layer_map                            =deepcopy(layer_map)
-    end
-    if !is(parameter_map, nothing)
-      g_parameter_map                        =deepcopy(parameter_map)
-    end
-    if !is(extended_config_funcs, nothing)
-      g_extended_config_funcs                =deepcopy(extended_config_funcs)
-    end
-    if !is(command_config_args, nothing)
-      g_command_config_args                  =deepcopy(command_config_args)
-    end
-    if !is(py_module_name_list, nothing)
-      g_py_module_name_list                  =deepcopy(py_module_name_list)
-    end
-    if !is(current_submodel, nothing)
-      g_current_submodel                     =deepcopy(current_submodel)
-    end
-    if !is(root_submodel, nothing)
-      g_root_submodel                        =deepcopy(root_submodel)
-    end
-    if !is(submodel_map, nothing)
-      g_submodel_map                         =deepcopy(submodel_map)
-    end
-    if !is(submodel_stack, nothing)
-      g_submodel_stack                       =deepcopy(submodel_stack)
-    end
-    if !is(add_submodel_suffix, nothing)
-      g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
+    g_default_momentum                     =deepcopy(default_momentum)
+    g_default_decay_rate                   =deepcopy(default_decay_rate)
+    g_default_initial_mean                 =deepcopy(default_initial_mean)
+    g_default_initial_std                  =deepcopy(default_initial_std)
+    g_default_num_batches_regularization   =deepcopy(default_num_batches_regularization)
+    g_default_initial_strategy             =deepcopy(default_initial_strategy)
+    g_default_initial_smart                =deepcopy(default_initial_smart)
+    g_default_gradient_clipping_threshold  =deepcopy(default_gradient_clipping_threshold)
+    g_default_device                       =deepcopy(default_device)
+    g_default_update_hooks                 =deepcopy(default_update_hooks)
+    g_default_compact_func                 =deepcopy(default_compact_func)
+    g_config                               =deepcopy(config)
+    g_layer_map                            =deepcopy(layer_map)
+    g_parameter_map                        =deepcopy(parameter_map)
+    g_extended_config_funcs                =deepcopy(extended_config_funcs)
+    g_command_config_args                  =deepcopy(command_config_args)
+    g_py_module_name_list                  =deepcopy(py_module_name_list)
+    g_current_submodel                     =deepcopy(current_submodel)
+    g_root_submodel                        =deepcopy(root_submodel)
+    g_submodel_map                         =deepcopy(submodel_map)
+    g_submodel_stack                       =deepcopy(submodel_stack)
+    g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
     end
   end
 end
