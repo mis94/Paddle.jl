@@ -37,7 +37,7 @@ network, this method will calculate the input order by dfs travel.
 :return:
 """
 function outputs(layers, args...)
-  function __dfs_travel__(layer, predicate = x -> x.layer_type == "DATA") #TODO: Change hardcoded "DATA" to LayerType.DATA
+  function __dfs_travel__(layer, predicate = x -> x.layer_type == "data") #TODO: Change hardcoded "DATA" to LayerType.DATA
     @assert isa(layer, LayerOutput) @sprintf("layer is %s", layer)
     retv = []
 
@@ -82,7 +82,7 @@ function outputs(layers, args...)
   for each_layer in layers
     @assert isa(each_layer, LayerOutput)
     inputs = vcat(inputs, __dfs_travel__(each_layer))
-    outputs = vcat(outputs, __dfs_travel__(each_layer, x -> x.layer_type == "COST")) #TODO: Change hardcoded "COST" to LayerType.COST
+    outputs = vcat(outputs, __dfs_travel__(each_layer, x -> x.layer_type == "cost")) #TODO: Change hardcoded "COST" to LayerType.COST
   end
 
   final_inputs = []
