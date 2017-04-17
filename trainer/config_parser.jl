@@ -2,6 +2,30 @@ include(dirname(Base.source_path()) * "/globals.jl")
 using globals
 
 
+
+function MakeLayerNameInSubmodel(name, submodel_name=nothing)
+  if is(submodel_name, nothing) && !globals.g_add_submodel_suffix && !globals.g_current_submodel.is_recurrent_layer_group
+    return name
+  end
+
+  if is(submodel_name, nothing)
+    submodel_name = globals.g_current_submodel.name
+  end
+
+  return name * "@" * submodel_name
+end
+
+
+
+function config_assert(b, msg)
+  if !b
+    #TODO: logger
+    # logger.fata(msg)
+    println(msg)
+  end
+end
+
+
 function NoDecoInputs(args)
   for name in args
 
@@ -20,14 +44,17 @@ function NoDecoInputs(args)
 end
 
 
-function Inputs()
-  deco_config_func(NoDecoInputs, "Inputs")
+function Inputs(args)
+  deco_config_func(NoDecoInputs, args, string(Inputs))
 end
 
 
-function deco_config_func(func, name)
+function deco_config_func(func, args, name)
   globals.g_config_funcs[name] = func
-  return func
+  if(is(args, nothing))
+    return func()
+  end
+  return func(args)
 end
 
 
@@ -36,7 +63,7 @@ function NoDecoHasInputsSet()
 end
 
 function HasInputsSet()
-  deco_config_func(NoDecoHasInputsSet, "HasInputsSet")
+  deco_config_func(NoDecoHasInputsSet, nothing, string(HasInputsSet))
 end
 
 function NoDecoOutputs(args)
@@ -56,6 +83,11 @@ function NoDecoOutputs(args)
   end
 end
 
-function Outputs()
-  deco_config_func(NoDecoOutputs, "Outputs")
+function Outputs(args)
+  deco_config_func(NoDecoOutputs, args, string(Outputs))
 end
+
+
+
+globals.g_config_funcs["TST"] = "asdf"
+eval(globals, :(g_add_submodel_suffix = true))

@@ -36,6 +36,7 @@ module globals
   g_submodel_map=Dict()
   g_submodel_stack=[]
   g_add_submodel_suffix=false
+  g_config_funcs=Dict()
 
   function init_config_environment(
   default_momentum=nothing,
@@ -87,25 +88,3 @@ module globals
   end
 end
 
-
-function MakeLayerNameInSubmodel(name, submodel_name=nothing)
-  if is(submodel_name, nothing) && !globals.g_add_submodel_suffix && !globals.g_current_submodel.is_recurrent_layer_group
-    return name
-  end
-
-  if is(submodel_name, nothing)
-    submodel_name = globals.g_current_submodel.name
-  end
-
-  return name * "@" * submodel_name
-end
-
-
-
-function config_assert(b, msg)
-  if !b
-    #TODO: logger
-    # logger.fata(msg)
-    println(msg)
-  end
-end
