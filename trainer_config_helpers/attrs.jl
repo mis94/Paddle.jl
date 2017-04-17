@@ -23,7 +23,7 @@ function is_compatible_with(x, Type)
   end
 
   try
-    if Float64 == Type || Int64 == Type
+    if AbstractFloat == Type || Int == Type
     # avoid those types that can be converted to float/int but not very
     # meaningful and  could potentially lead to error
     # i.e., str and bool typed value should not be used for initializing float/int variable
@@ -123,7 +123,7 @@ type ParameterAttribute
     elseif initial_std == nothing && initial_mean == nothing && initial_max == nothing && initial_min == nothing
       this.attr = Dict()
       this.attr["initial_smart"] = true
-    elseif is_compatible_with(initial_std, Float64) || is_compatible_with(initial_mean, Float64)
+    elseif is_compatible_with(initial_std, AbstractFloat) || is_compatible_with(initial_mean, AbstractFloat)
       this.attr = Dict()
       if initial_std != nothing
         this.attr["initial_std"] = initial_std
@@ -133,7 +133,7 @@ type ParameterAttribute
       end
       this.attr["initial_strategy"] = 0
       # Gauss Random
-    elseif is_compatible_with(initial_max, Float64) && is_compatible_with(initial_min, Float64)
+    elseif is_compatible_with(initial_max, AbstractFloat) && is_compatible_with(initial_min, AbstractFloat)
       this.initial_max = initial_max
       this.initial_min = initial_min
 
@@ -150,19 +150,19 @@ type ParameterAttribute
       throw(ArgumentError("Unexpected branch."))
     end
 
-    if is_static == false && is_compatible_with(l1_rate, Float64)
+    if is_static == false && is_compatible_with(l1_rate, AbstractFloat)
       this.attr["decay_rate_l1"] = l1_rate
     end
 
-    if is_static == false && is_compatible_with(l2_rate, Float64)
+    if is_static == false && is_compatible_with(l2_rate, AbstractFloat)
       this.attr["decay_rate"] = l2_rate
     end
 
-    if is_static == false && is_compatible_with(learning_rate, Float64)
+    if is_static == false && is_compatible_with(learning_rate, AbstractFloat)
       this.attr["learning_rate"] = learning_rate
     end
 
-    if is_static == false && is_compatible_with(momentum, Float64)
+    if is_static == false && is_compatible_with(momentum, AbstractFloat)
       this.attr["momentum"] = momentum
     end
 
@@ -175,7 +175,7 @@ type ParameterAttribute
       this.attr["sparse_remote_update"] = true
     end
 
-    if gradient_clipping_threshold != nothing && is_compatible_with(gradient_clipping_threshold, Float64)
+    if gradient_clipping_threshold != nothing && is_compatible_with(gradient_clipping_threshold, AbstractFloat)
       this.attr["gradient_clipping_threshold"] = gradient_clipping_threshold
     end
     return this
@@ -195,7 +195,6 @@ type ParameterAttribute
     end
   end
 
-  #@warrning (What is the Bias Object ?)
   function to_bias(bias_attr)
     if typeof(bias_attr) == ParameterAttribute
       return bias_attr.attr
@@ -242,17 +241,17 @@ type ExtraLayerAttribute
     this.attributesSet = Set{String}()
 
 
-    if typeof(error_clipping_threshold) == Float64
+    if typeof(error_clipping_threshold) == AbstractFloat
       @assert error_clipping_threshold > 0
       this.attr["error_clipping_threshold"] = error_clipping_threshold
     end
 
-    if typeof(drop_rate) == Float64
+    if typeof(drop_rate) == AbstractFloat
       @assert drop_rate > 0
       this.attr["drop_rate"] = drop_rate
     end
 
-    if typeof(device) == Int64
+    if typeof(device) == Int
       @assert device > 0
       this.attr["device"] = device
     end
