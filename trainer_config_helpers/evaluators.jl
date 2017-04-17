@@ -41,6 +41,7 @@ function classification_error_evaluator(
                                 weight=nothing,
                                 top_k=nothing,
                                 threshold=nothing)
+     name = wrap_name_default(name, string(classification_error_evaluator))
      evaluator_base(
         input,
         "classification_error",
