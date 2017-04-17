@@ -1,4 +1,4 @@
-
+#include(config_parser.jl)
 
 function convert_and_compare(x, Type)
   """
@@ -231,6 +231,7 @@ type ExtraLayerAttribute
   drop_rate
   device
   attr
+  attributesSet::Set{String}
 
   function ExtraLayerAttribute( error_clipping_threshold = nothing
                               , drop_rate = nothing
@@ -238,6 +239,8 @@ type ExtraLayerAttribute
 
     this = new()
     this.attr = Dict()
+    this.attributesSet = Set{String}()
+
 
     if typeof(error_clipping_threshold) == Float64
       @assert error_clipping_threshold > 0
@@ -258,7 +261,11 @@ type ExtraLayerAttribute
   end
 
   function check(layer_name)
-    # TODO it
+    for key in attr
+      if !in(key, attributesSet)
+        error("Layer " * layer_name * " cannot support" * key)
+      end
+    end
   end
 
   function to_kwargs(attr)
