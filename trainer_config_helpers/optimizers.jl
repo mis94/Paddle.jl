@@ -4,17 +4,17 @@
     abstract BaseSGDOptimizer <: Optimizer
 
     type MomentumOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         momentum
         sparse
         extra_settings::Function
         to_setting_kwargs::Function
-        #TODO is_support_sparse::Function
         #TODO explicitely state types?
         
 
         function MomentumOptimizer(momentum = nothing, sparse = false)
             this = new()
-            
+            this.is_support_sparse = true;    
             this.momentum = momentum
             this.sparse = sparse
 
@@ -36,6 +36,7 @@
 
 
     type AdamOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         beta1
         beta2
         epsilon
@@ -44,6 +45,7 @@
         #TODO is_support_sparse::Function
         function AdamOptimizer(beta1=0.9, beta2=0.999, epsilon=1e-8)
             this = new()
+            this.is_support_sparse = false;
             this.beta1 = beta1
             this.beta2 = beta2
             this.epsilon = epsilon
@@ -63,13 +65,15 @@
 
 
     type AdamxOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         beta1
         beta2
         extra_settings::Function
         to_setting_kwargs::Function
-        #TODO is_support_sparse::Function
+        
         function AdamxOptimizer(beta1, beta2)
             this = new()
+            this.is_support_sparse = false;
             this.beta1 = beta1
             this.beta2 = beta2
             this.extra_settings = function ()
@@ -86,11 +90,13 @@
     end
 
     type AdaGradOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         extra_settings::Function
         to_setting_kwargs::Function
-        #TODO is_support_sparse::Function
+        
         function AdaGradOptimizer()
             this = new()
+            this.is_support_sparse = true;
             this.extra_settings = function ()
             end
 
@@ -104,13 +110,14 @@
 
 
     type RMSPropOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         rho
         epsilon
         extra_settings::Function
         to_setting_kwargs::Function
-        #TODO is_support_sparse::Function
         function RMSPropOptimizer(rho=0.95, epsilon=1e-6)
             this = new()
+            this.is_support_sparse = true;
             this.rho = rho
             this.epsilon = epsilon
             this.extra_settings = function ()
@@ -127,6 +134,7 @@
     end
 
     type DecayedAdaGradOptimizer <: BaseSGDOptimizer
+        is_support_sparse
         rho
         epsilon
         extra_settings::Function
@@ -134,6 +142,7 @@
         #TODO is_support_sparse::Function
         function DecayedAdaGradOptimizer(rho=0.95, epsilon=1e-6)
             this = new()
+            this.is_support_sparse = true;
             this.rho = rho
             this.epsilon = epsilon
             this.extra_settings = function ()
@@ -150,6 +159,7 @@
     end
 
     type AdaDeltaOptimizer <: BaseSGDOptimizer
+        is_support_sparse 
         rho
         epsilon
         extra_settings::Function
@@ -157,6 +167,7 @@
         #TODO is_support_sparse::Function
         function AdaDeltaOptimizer(rho=0.95, epsilon=1e-6)
             this = new()
+            this.is_support_sparse = true;
             this.rho = rho
             this.epsilon = epsilon
             this.extra_settings = function ()
@@ -175,6 +186,7 @@
     abstract BaseRegularization <: Optimizer
 
     type L2Regularization <: BaseRegularization
+        is_support_sparse
         algorithm
         learning_method
         decay_rate
@@ -183,6 +195,7 @@
 
         function L2Regularization(rate)
             this = new()
+            this.is_support_sparse = true;
             this.algorithm = ""
             this.learning_method = ""
             this.decay_rate = rate
@@ -205,6 +218,7 @@
     end
 
     type ModelAverage <: Optimizer
+        is_support_sparse
         average_window
         max_average_window
         do_average_in_cpu
@@ -215,6 +229,7 @@
                      max_average_window=nothing,
                      do_average_in_cpu=false)
             this = new()
+            this.is_support_sparse = true;
             this.average_window = average_window
             this.max_average_window = max_average_window
             this.do_average_in_cpu = do_average_in_cpu
@@ -235,12 +250,14 @@
     end
 
     type GradientClippingThreshold <: Optimizer
+        is_support_sparse
         threshold
         extra_settings::Function
         to_setting_kwargs::Function
 
         function GradientClippingThreshold(threshold)
             this = new()
+            this.is_support_sparse = true;
             this.threshold = threshold
 
             this.to_setting_kwargs = function ()
