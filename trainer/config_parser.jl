@@ -15,16 +15,30 @@ function MakeLayerNameInSubmodel(name, submodel_name=nothing)
   return name * "@" * submodel_name
 end
 
-
-
 function config_assert(b, msg)
-  if !b
+  if is(b, nothing)
     #TODO: logger
-    # logger.fata(msg)
+    # logger.fatal(msg)
     println(msg)
   end
 end
 
+function deco_config_func(func, name)
+  globals.g_config_funcs[name] = func
+end
+
+function deco_config_func1(func, name, args)
+  deco_config_func(func, name)
+  if(is(args, nothing))
+    return func()
+  end
+  return func(args)
+end
+
+function deco_config_func2(func, name, layerName, layerType, kwargs)
+  deco_config_func(func, name)
+  func(layerName, layerType, kwargs)
+end
 
 function NoDecoInputs(args)
   for name in args
@@ -43,27 +57,16 @@ function NoDecoInputs(args)
   end
 end
 
-
 function Inputs(args)
-  deco_config_func(NoDecoInputs, args, string(Inputs))
+  deco_config_func1(NoDecoInputs, string(Inputs), args)
 end
-
-
-function deco_config_func(func, args, name)
-  globals.g_config_funcs[name] = func
-  if(is(args, nothing))
-    return func()
-  end
-  return func(args)
-end
-
 
 function NoDecoHasInputsSet()
   length(globals.g_current_submodel.input_layer_name) != 0
 end
 
 function HasInputsSet()
-  deco_config_func(NoDecoHasInputsSet, nothing, string(HasInputsSet))
+  deco_config_func1(NoDecoHasInputsSet, string(HasInputsSet), nothing)
 end
 
 function NoDecoOutputs(args)
@@ -84,10 +87,28 @@ function NoDecoOutputs(args)
 end
 
 function Outputs(args)
-  deco_config_func(NoDecoOutputs, args, string(Outputs))
+  deco_config_func1(NoDecoOutputs, string(Outputs), args)
+end
+
+function NoDecoLayer(name, layerType, kwargs)
+  layers = Dict()
+  merge!(layers, globals.g_cost_map, globals.g_layer_type_map)
+  layer_func = layers[layerType]
+  config_assert(layer_func, "layer type " * layerType * " not supported")
+  return layer_func(name, kwargs)
+end
+
+function Layer(name, layerType, kwargs)
+  deco_config_func2(NoDecoLayer, string(Layer), name, layerType, kwargs)
 end
 
 
 
-globals.g_config_funcs["TST"] = "asdf"
-eval(globals, :(g_add_submodel_suffix = true))
+
+
+
+
+
+#for trying
+#globals.g_config_funcs["TST"] = "asdf"
+#eval(globals, :(g_add_submodel_suffix = true))

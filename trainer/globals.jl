@@ -37,6 +37,8 @@ module globals
   g_submodel_stack=[]
   g_add_submodel_suffix=false
   g_config_funcs=Dict()
+  g_cost_map=Dict()
+  g_layer_type_map=Dict()
 
   function init_config_environment(
   default_momentum=nothing,
