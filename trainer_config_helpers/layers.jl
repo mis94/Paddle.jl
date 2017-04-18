@@ -4,7 +4,7 @@
 #include("default_decorators.jl")
 
 type LayerType
-    # layer type enumerations
+
     layersTypes::Set{String}
     is_layer_type::Function
 
@@ -21,8 +21,8 @@ type LayerType
         push!(this.layersTypes, "seqfirstins")
         push!(this.layersTypes, "max")
         push!(this.layersTypes, "average")
-        push!(this.layersTypes, "cost")
         push!(this.layersTypes, "fc")
+        push!(this.layersTypes, "cost")
         push!(this.layersTypes, "cos_vm")
         push!(this.layersTypes, "cos")
         push!(this.layersTypes, "hsigmoid")
@@ -157,7 +157,16 @@ end
 
 function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothing)
     layer_support(string(data_layer), name, size, height, width, layer_attr, device="device")
-    # TODO: call Layer function in config_parser
+
+    kwargs = Dict()
+    kwargs[Symbol("size")] = size
+    kwargs[Symbol("height")] = height
+    kwargs[Symbol("width")] = width
+
+    #discuss how should static method be implemented
+    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+
+    Layer(name, "data", kwargs)
 
     return LayerOutput(name, "data", size=size)
 end
@@ -197,7 +206,14 @@ function fc_layer(input,
 
     @assert isa(input, Array) || isa(input, Tuple)
 
-    # TODO: call Layer function in config_parser
+    kwargs = Dict()
+    #TODO: kwargs[Symbol("inputs")] = object from class Input in config_parser
+    kwargs[Symbol("size")] = size
+    kwargs[Symbol("bias")] = ParamAttr.to_bias(bias_attr)
+    kwargs[Symbol("active_type")] = act.name
+    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+
+    Layer(name, "fc", kwargs)
 
     return LayerOutput(name, "fc", activation=act, size=size)
 end
@@ -220,11 +236,14 @@ function classificationCost(input,
 
     ipts, parents = __cost_input__(input, label, weight)
 
-    # TODO: call Layer function in config_parser
+    kwargs = Dict()
+    kwargs[Symbol("inputs")] = ipts
+    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+
+    Layer(name, "multi-class-cross-entropy", kwargs)
 
     function __add_evaluator__(e)
         @assert isa(e, Function)
-        # Some checking is done here in evaluators file, needs some discussion
         e(input, label, name=string(evaluator), weight=weight)
     end
 
@@ -240,7 +259,7 @@ function classificationCost(input,
 end
 
 function __cost_input__(input, label, weight=nothing)
-    # TODO: ipts = [Input(input.name), Input(label.name)] implement Input in config_parser
+    # TODO: ipts = [Input(input.name), Input(label.name)] implement class Input in config_parser
     parents = [input, label]
     if !isa(weight, Void)
         @assert weight.layer_type == "data"
@@ -254,7 +273,12 @@ function maxid_layer(input, name=nothing, layer_attr=nothing)
     name = wrap_name_default(name, string(maxid_layer))
 
     @assert isa(input, LayerOutput)
-    # TODO: call Layer function in config_parser
-    l = nothing # this should be equal the returned value from Layer in config_parser
+
+    kwargs = Dict()
+    kwargs[Symbol("inputs")] = [input.name]
+    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+
+    l = Layer(name, "maxid", kwargs)
+
     return LayerOutput(name=name, layer_type="maxid", parents=[input], size=l.config.size)
 end
