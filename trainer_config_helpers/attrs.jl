@@ -197,7 +197,7 @@ type ParameterAttribute
 
   function to_bias(bias_attr)
     if typeof(bias_attr) == ParameterAttribute
-      return bias_attr.attr
+      #TODO: implement Bias class in config_parser and return an object from it
     else
       return false
     end
@@ -271,7 +271,7 @@ type ExtraLayerAttribute
     if attr == nothing
       return Dict()
     else
-      attr.attr
+      return attr.attr
     end
   end
 
