@@ -1,7 +1,7 @@
 module globals
   # These includes are topologically sorted
   proto_path = dirname(Base.source_path()) * "/../proto.jl/"
-  println(proto_path)
+  #println(proto_path)
   include(proto_path * "DataConfig_pb.jl")
   include(proto_path * "ParameterConfig_pb.jl")
   include(proto_path * "ModelConfig_pb.jl")

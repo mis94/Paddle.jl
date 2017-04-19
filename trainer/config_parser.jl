@@ -102,43 +102,45 @@ function Layer(name, layerType, kwargs)
   deco_config_func2(NoDecoLayer, string(Layer), name, layerType, kwargs)
 end
 
-type Input
-  input_layer_name
+type Bias
 
-  function Input(input_layer_name;
-            parameter_name=nothing,
-            learning_rate=nothing,
-            momentum=nothing,
-            decay_rate=nothing,
-            decay_rate_l1=nothing,
-            initial_mean=nothing,
-            initial_std=nothing,
-            initial_strategy=nothing,
-            initial_smart=nothing,
-            num_batches_regularization=nothing,
-            sparse_remote_update=nothing,
-            sparse_update=nothing,
-            gradient_clipping_threshold=nothing,
-            conv=nothing,
-            bilinear_interp=nothing,
-            norm=nothing,
-            pool=nothing,
-            image=nothing,
-            block_expand=nothing,
-            maxout=nothing,
-            spp=nothing,
-            pad=nothing,
-            format=nothing,
-            nnz=nothing,
-            is_static=nothing,
-            is_shared=nothing,
-            update_hooks=nothing,
-            input_layer_argument=nothing,
-            make_layer_name_in_submodel=true)
+  locals
+
+  function Bias(kwargs)
+
+    globals.g_config_funcs[string(Bias)] = Bias
+
+    this = new()
+
+    this.locals = Dict()
+    for key in keys(kwargs)
+      if key[1] != '_'
+        this.locals[key] = kwargs[key]
+      end
+    end
+
+    return this
+
+  end
+end
+
+type Input
+
+  input_layer_name
+  locals
+
+  function Input(input_layer_name, kwargs)
 
     globals.g_config_funcs[string(Input)] = Input
 
     this = new()
+
+    this.locals = Dict()
+    for key in keys(kwargs)
+      if key[1] != '_'
+        this.locals[key] = kwargs[key]
+      end
+    end
 
     if make_layer_name_in_submodel
       this.input_layer_name = MakeLayerNameInSubmodel(input_layer_name)
