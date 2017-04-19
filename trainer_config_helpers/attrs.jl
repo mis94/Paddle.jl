@@ -197,7 +197,7 @@ type ParameterAttribute
 
   function to_bias(bias_attr)
     if typeof(bias_attr) == ParameterAttribute
-      #TODO: implement Bias class in config_parser and return an object from it
+      return Bias(bias_attr.attr)
     else
       return false
     end
@@ -262,7 +262,7 @@ type ExtraLayerAttribute
   function check(layer_name)
     for key in attr
       if !in(key, attributesSet)
-        error("Layer " * layer_name * " cannot support" * key)
+        error("Layer " * layer_name * " cannot support " * key)
       end
     end
   end
