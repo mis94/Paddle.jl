@@ -77,16 +77,39 @@ type Bias
 
   locals
 
-  function Bias(kwargs)
+  function Bias(kwargs=nothing)
 
     globals.g_config_funcs[string(Bias)] = Bias
 
     this = new()
 
     this.locals = Dict()
-    for key in keys(kwargs)
+    temp = Dict()
+
+    temp["parameter_name"] = nothing
+    temp["learning_rate"] = nothing
+    temp["momentum"] = nothing
+    temp["decay_rate"] = nothing
+    temp["decay_rate_l1"] = nothing
+    temp["initial_mean"] = nothing
+    temp["initial_std"] = nothing
+    temp["initial_strategy"] = nothing
+    temp["initial_smart"] = nothing
+    temp["num_batches_regularization"] = nothing
+    temp["sparse_remote_update"] = nothing
+    temp["gradient_clipping_threshold"] = nothing
+    temp["is_static"] = nothing
+    temp["is_shared"] = nothing
+
+    if kwargs != nothing
+      for key in keys(kwargs)
+        temp[key] = kwargs[key]
+      end
+    end
+
+    for key in keys(temp)
       if key[1] != '_'
-        this.locals[key] = kwargs[key]
+        this.locals[key] = temp[key]
       end
     end
 
@@ -100,16 +123,54 @@ type Input
   input_layer_name
   locals
 
-  function Input(input_layer_name, kwargs)
+  function Input(input_layer_name, kwargs=nothing)
 
     globals.g_config_funcs[string(Input)] = Input
 
     this = new()
 
     this.locals = Dict()
-    for key in keys(kwargs)
+    temp = Dict()
+
+    temp["parameter_name"] = nothing
+    temp["learning_rate"] = nothing
+    temp["momentum"] = nothing
+    temp["decay_rate"] = nothing
+    temp["decay_rate_l1"] = nothing
+    temp["initial_mean"] = nothing
+    temp["initial_std"] = nothing
+    temp["initial_strategy"] = nothing
+    temp["initial_smart"] = nothing
+    temp["num_batches_regularization"] = nothing
+    temp["sparse_remote_update"] = nothing
+    temp["sparse_update"] = nothing
+    temp["gradient_clipping_threshold"] = nothing
+    temp["conv"] = nothing
+    temp["bilinear_interp"] = nothing
+    temp["norm"] = nothing
+    temp["pool"] = nothing
+    temp["image"] = nothing
+    temp["block_expand"] = nothing
+    temp["maxout"] = nothing
+    temp["spp"] = nothing
+    temp["pad"] = nothing
+    temp["format"] = nothing
+    temp["nnz"] = nothing
+    temp["is_static"] = nothing
+    temp["is_shared"] = nothing
+    temp["update_hooks"] = nothing
+    temp["input_layer_argument"] = nothing
+    temp["make_layer_name_in_submodel"] = true
+
+    if kwargs != nothing
+      for key in keys(kwargs)
+        temp[key] = kwargs[key]
+      end
+    end
+
+    for key in keys(temp)
       if key[1] != '_'
-        this.locals[key] = kwargs[key]
+        this.locals[key] = temp[key]
       end
     end
 
