@@ -102,11 +102,136 @@ function Layer(name, layerType, kwargs)
   deco_config_func2(NoDecoLayer, string(Layer), name, layerType, kwargs)
 end
 
+function default_momentum(val)
+  globals.g_config_funcs[string(default_momentum)] = default_momentum
+  globals.g_default_momentum = val
+end
+
+function default_decay_rate(val)
+    globals.g_config_funcs[string(default_decay_rate)] = default_decay_rate
+    globals.g_default_decay_rate = val
+end
+
+function default_gradient_clipping_threshold(val)
+  globals.g_config_funcs[string(default_gradient_clipping_threshold)] = default_gradient_clipping_threshold
+  globals.default_gradient_clipping_threshold = val
+end
+
+settings  =  Dict(
+    "batch_size" => nothing,
+    "mini_batch_size" => nothing,
+    "algorithm" => "async_sgd",
+    "async_lagged_grad_discard_ratio" => 1.5,
+    "learning_method" => "momentum",
+    "num_batches_per_send_parameter" => nothing,
+    "num_batches_per_get_parameter" => nothing,
+    "center_parameter_update_method" => nothing,
+    "learning_rate" => 1.,
+    "learning_rate_decay_a" => 0.,
+    "learning_rate_decay_b" => 0.,
+    "learning_rate_schedule" => "poly",
+    "learning_rate_args" => "",
+    "l1weight" => 0.1,
+    "l2weight" => 0.,
+    "l2weight_zero_iter" => 0,
+    "c1" => 0.0001,
+    "backoff" => 0.5,
+    "owlqn_steps" => 10,
+    "max_backoff" => 5,
+    "average_window" => 0,
+    "do_average_in_cpu" => false,
+    "max_average_window" => nothing,
+    "ada_epsilon" => 1e-6,
+    "ada_rou" => 0.95,
+    "delta_add_rate" => 1.0,
+    "shrink_parameter_value" => 0,
+    "adam_beta1" => 0.9,
+    "adam_beta2" => 0.999,
+    "adam_epsilon" => 1e-8)
+
+trainer_settings = Dict(
+    "save_dir" => "./output/model",
+    "init_model_path" => "nothing",
+    "start_pass" => 0)
 
 
+function Settings(;kwargs...)
+  for arg in kwargs
+    k = string(arg[1])
+    v = arg[2]
+    if k in keys(settings)
+      settings[k] = v
+    elseif k in keys(trainer_settings)
+      trainer_settings[k] = v
+    end
+    #TODO fatal if k not in settings nor trainer_settings
+  end
+end
 
+#TODO check UndefRefError in proto
+function Evaluator(
+        name,
+        etype,
+        inputs,
+        chunk_scheme=nothing,
+        num_chunk_types=nothing,
+        classification_threshold=nothing,
+        positive_label=nothing,
+        dict_file=nothing,
+        result_file=nothing,
+        num_results=nothing,
+        top_k=nothing,
+        delimited=nothing,
+        excluded_chunk_types=nothing)
+  globals.g_config_funcs[string(Evaluator)] = Evaluator
 
+  evaluator = EvaluatorConfig()
+  push!(globals.g_config.model_config.evaluators, evaluator)
 
+  evaluator.etype = etype
+  evaluator.name = MakeLayerNameInSubmodel(name)
+  if isa(inputs, AbstractString)
+    inputs = [inputs]
+  end
+
+  for name in inputs
+    push!(evaluator.input_layers, MakeLayerNameInSubmodel(name))
+  end
+
+  if chunk_scheme != nothing
+    evaluator.chunk_scheme = chunk_scheme
+    evaluator.num_chunk_types = num_chunk_types
+  end
+
+  push!(globals.g_current_submodel.evaluator_names, evaluator.name)
+
+  if classification_threshold != nothing
+    evaluator.classification_threshold = classification_threshold
+  end
+  if positive_label != nothing
+    evaluator.positive_label = positive_label
+  end
+  if dict_file != nothing
+    evaluator.dict_file = dict_file
+  end
+  if result_file != nothing
+    evaluator.result_file = result_file
+  end
+  if num_results != nothing
+    evaluator.num_results = num_results
+  end
+  if top_k != nothing
+    evaluator.top_k = top_k
+  end
+  if delimited != nothing
+    evaluator.delimited = delimited
+  end
+  if excluded_chunk_types != nothing
+    for chunk in excluded_chunk_types
+      push!(evaluator.excluded_chunk_types, chunk)
+    end
+  end
+end
 
 
 #for trying
