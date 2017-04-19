@@ -187,17 +187,21 @@ end
 
 function default_momentum(val)
   globals.g_config_funcs[string(default_momentum)] = default_momentum
-  globals.g_default_momentum = val
+  #globals.g_default_momentum = val
+  globals.set_default_momentum(val)
 end
 
 function default_decay_rate(val)
     globals.g_config_funcs[string(default_decay_rate)] = default_decay_rate
-    globals.g_default_decay_rate = val
+    #globals.g_default_decay_rate = val
+    globals.set_default_momentum(val)
+
 end
 
 function default_gradient_clipping_threshold(val)
   globals.g_config_funcs[string(default_gradient_clipping_threshold)] = default_gradient_clipping_threshold
-  globals.default_gradient_clipping_threshold = val
+  #globals.default_gradient_clipping_threshold = val
+  globals.set_default_gradient_clipping_threshold(val)
 end
 
 settings  =  Dict(
@@ -251,11 +255,10 @@ function Settings(;kwargs...)
   end
 end
 
-#TODO check UndefRefError in proto
 function Evaluator(
         name,
         etype,
-        inputs,
+        inputs;
         chunk_scheme=nothing,
         num_chunk_types=nothing,
         classification_threshold=nothing,
@@ -267,55 +270,58 @@ function Evaluator(
         delimited=nothing,
         excluded_chunk_types=nothing)
   globals.g_config_funcs[string(Evaluator)] = Evaluator
+  globals.set_field!(globals.g_config, :model_config, globals.ModelConfig())
 
-  evaluator = EvaluatorConfig()
-  push!(globals.g_config.model_config.evaluators, evaluator)
+  evaluator = globals.EvaluatorConfig()
+  globals.add_field!(globals.g_config.model_config, :evaluators, evaluator)  
 
-  evaluator.etype = etype
-  evaluator.name = MakeLayerNameInSubmodel(name)
+  globals.set_field!(evaluator, :_type, etype)
+  globals.set_field!(evaluator, :name, MakeLayerNameInSubmodel(name))
+  
   if isa(inputs, AbstractString)
     inputs = [inputs]
   end
 
   for name in inputs
-    push!(evaluator.input_layers, MakeLayerNameInSubmodel(name))
+    globals.add_field!(evaluator, :input_layers, MakeLayerNameInSubmodel(name))
   end
 
   if chunk_scheme != nothing
-    evaluator.chunk_scheme = chunk_scheme
-    evaluator.num_chunk_types = num_chunk_types
+    globals.set_field!(evaluator, :chunk_scheme, chunk_scheme)
+    globals.set_field!(evaluator, :num_chunk_types, num_chunk_types)
   end
-
-  push!(globals.g_current_submodel.evaluator_names, evaluator.name)
-
+  
+  globals.add_field!(globals.g_current_submodel, :evaluator_names, evaluator.name)
+  
   if classification_threshold != nothing
     evaluator.classification_threshold = classification_threshold
+    globals.set_field!(evaluator, :classification_threshold, classification_threshold)
   end
   if positive_label != nothing
-    evaluator.positive_label = positive_label
+    globals.set_field!(evaluator, :positive_label, positive_label)
   end
   if dict_file != nothing
-    evaluator.dict_file = dict_file
+    globals.set_field!(evaluator, :dict_file, dict_file)
   end
   if result_file != nothing
-    evaluator.result_file = result_file
+    globals.set_field!(evaluator, :result_file, result_file)
   end
   if num_results != nothing
-    evaluator.num_results = num_results
+    globals.set_field!(evaluator, :num_results, num_results)
   end
   if top_k != nothing
-    evaluator.top_k = top_k
+    globals.set_field!(evaluator, :top_k, top_k)
   end
   if delimited != nothing
-    evaluator.delimited = delimited
+    globals.set_field!(evaluator, :delimited, delimited)
   end
+
   if excluded_chunk_types != nothing
     for chunk in excluded_chunk_types
-      push!(evaluator.excluded_chunk_types, chunk)
+      globals.add_field!(globals.evaluator, :excluded_chunk_types, chunk)  
     end
-  end
+  end  
 end
-
 
 #for trying
 #globals.g_config_funcs["TST"] = "asdf"
