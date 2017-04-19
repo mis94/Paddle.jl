@@ -159,9 +159,9 @@ function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothin
     layer_support(string(data_layer), name, size, height, width, layer_attr, device="device")
 
     kwargs = Dict()
-    kwargs[Symbol("size")] = size
-    kwargs[Symbol("height")] = height
-    kwargs[Symbol("width")] = width
+    kwargs["size"] = size
+    kwargs["height"] = height
+    kwargs["width"] = width
 
     #discuss how should static method be implemented
     merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
@@ -207,10 +207,16 @@ function fc_layer(input,
     @assert isa(input, Array) || isa(input, Tuple)
 
     kwargs = Dict()
-    #TODO: kwargs[Symbol("inputs")] = object from class Input in config_parser
-    kwargs[Symbol("size")] = size
-    kwargs[Symbol("bias")] = ParamAttr.to_bias(bias_attr)
-    kwargs[Symbol("active_type")] = act.name
+
+    inputs = []
+    for (ipt, attr) in zip(input, param_attr)
+        push!(inputs, Input(ipt.name, attr.attr))
+    end
+    kwargs["inputs"] = inputs
+    
+    kwargs["size"] = size
+    kwargs["bias"] = ParamAttr.to_bias(bias_attr)
+    kwargs["active_type"] = act.name
     merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
 
     Layer(name, "fc", kwargs)
@@ -237,7 +243,7 @@ function classificationCost(input,
     ipts, parents = __cost_input__(input, label, weight)
 
     kwargs = Dict()
-    kwargs[Symbol("inputs")] = ipts
+    kwargs["inputs"] = ipts
     merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
 
     Layer(name, "multi-class-cross-entropy", kwargs)
@@ -275,7 +281,7 @@ function maxid_layer(input; name=nothing, layer_attr=nothing)
     @assert isa(input, LayerOutput)
 
     kwargs = Dict()
-    kwargs[Symbol("inputs")] = [input.name]
+    kwargs["inputs"] = [input.name]
     merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
 
     l = Layer(name, "maxid", kwargs)
