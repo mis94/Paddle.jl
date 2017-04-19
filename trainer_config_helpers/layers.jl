@@ -172,7 +172,7 @@ function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothin
 end
 
 function fc_layer(input,
-                 size,
+                 size;
                  act=nothing,
                  name=nothing,
                  param_attr=nothing,
@@ -219,7 +219,7 @@ function fc_layer(input,
 end
 
 function classificationCost(input,
-                            label,
+                            label;
                             weight=nothing,
                             name=nothing,
                             evaluator=classification_error_evaluator,
@@ -258,18 +258,18 @@ function classificationCost(input,
     return LayerOutput(name, "cost", parents=parents, size=1)
 end
 
-function __cost_input__(input, label, weight=nothing)
-    # TODO: ipts = [Input(input.name), Input(label.name)] implement class Input in config_parser
+function __cost_input__(input, label; weight=nothing)
+    ipts = [Input(input.name), Input(input.name)]
     parents = [input, label]
     if !isa(weight, Void)
         @assert weight.layer_type == "data"
-        # TODO: ipts.append(Input(weight.name))
+        push!(ipts, Input(weight.name))
         push!(parents, weight)
     end
-    #return ipts, parents
+    return ipts, parents
 end
 
-function maxid_layer(input, name=nothing, layer_attr=nothing)
+function maxid_layer(input; name=nothing, layer_attr=nothing)
     name = wrap_name_default(name, string(maxid_layer))
 
     @assert isa(input, LayerOutput)
