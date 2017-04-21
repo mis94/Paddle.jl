@@ -174,7 +174,7 @@ type Input
       end
     end
 
-    if make_layer_name_in_submodel
+    if this.locals["make_layer_name_in_submodel"] == true
       this.input_layer_name = MakeLayerNameInSubmodel(input_layer_name)
     else
       this.input_layer_name = input_layer_name
