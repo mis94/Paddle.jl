@@ -270,7 +270,6 @@ function Evaluator(
         delimited=nothing,
         excluded_chunk_types=nothing)
   globals.g_config_funcs[string(Evaluator)] = Evaluator
-  globals.set_field!(globals.g_config, :model_config, globals.ModelConfig())
 
   evaluator = globals.EvaluatorConfig()
   globals.add_field!(globals.g_config.model_config, :evaluators, evaluator)  
@@ -320,8 +319,60 @@ function Evaluator(
     for chunk in excluded_chunk_types
       globals.add_field!(globals.evaluator, :excluded_chunk_types, chunk)  
     end
-  end  
+  end
 end
+
+function update_g_config()
+
+  #TODO: implement this function
+  return globals.g_config
+end
+
+function parse_config(trainer_config, config_arg_str)
+
+  globals.init_config_environment()
+
+  config_args = Dict()
+
+  #make sure all proto usage is alright
+
+  globals.set_field!(globals.g_config.model_config, :_type, "nn") 
+
+  if config_arg_str != nothing
+    config_args = Dict([split(f, '=') for f in split(config_arg_str, ',')])
+
+  merge!(globals.g_command_config_args, config_args)
+
+  globals.g_root_submodel = globals.SubModelConfig()
+
+  globals.set_field!(globals.g_config, :model_config, globals.ModelConfig())
+
+  globals.add_field!(globals.g_config.model_config, :sub_models, globals.g_root_submodel)
+  globals.set_field!(globals.g_root_submodel, :name, "root")
+  globals.set_field!(globals.g_root_submodel, :is_recurrent_layer_group, false)
+
+  globals.g_current_submodel = globals.g_root_submodel
+
+  include(trainer_config) #execute the file
+
+  return update_g_config()
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #for trying
 #globals.g_config_funcs["TST"] = "asdf"
