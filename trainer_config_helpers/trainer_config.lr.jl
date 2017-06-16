@@ -6,3 +6,5 @@ include("activations.jl")
 include("networks.jl")
 
 #This file should be implemented and we can test the API by running it
+
+#NOTA when calling settings() in optimizers.jl, call settings_f() instead
