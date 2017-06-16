@@ -178,8 +178,8 @@ function fc_layer(input,
                  param_attr=nothing,
                  bias_attr=nothing,
                  layer_attr=nothing)
-    
-    layer_support(string(fc_layer), input, size, act, name, param_attr, bias_attr, layer_attr, 
+
+    layer_support(string(fc_layer), input, size, act, name, param_attr, bias_attr, layer_attr,
         errorClipping = "error_clipping_threshold", dropout = "drop_rate")
 
     act = wrap_act_default(act)
@@ -198,7 +198,7 @@ function fc_layer(input,
         else
             deepCopyOfParamAttr = deepcopy(param_attr)
             param_attr = []
-            for i 1:length(input)
+            for i in 1:length(input)
                 push!(param_attr, deepCopyOfParamAttr)
             end
         end
@@ -213,7 +213,7 @@ function fc_layer(input,
         push!(inputs, Input(ipt.name, attr.attr))
     end
     kwargs["inputs"] = inputs
-    
+
     kwargs["size"] = size
     kwargs["bias"] = ParamAttr.to_bias(bias_attr)
     kwargs["active_type"] = act.name
@@ -231,11 +231,11 @@ function classificationCost(input,
                             evaluator=classification_error_evaluator,
                             layer_attr=nothing)
 
-    layer_support(string(classificationCost), input, label, weight, name, evaluator, layer_attr, 
+    layer_support(string(classificationCost), input, label, weight, name, evaluator, layer_attr,
         device="device")
 
     name = wrap_name_default("cost", string(classificationCost))
-    
+
     @assert input.layer_type != "data"
     @assert isa(input.activation, SoftmaxActivation)
     @assert label.layer_type == "data"

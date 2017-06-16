@@ -10,11 +10,11 @@
         to_setting_kwargs::Function
         #TODO is_support_sparse::Function
         #TODO explicitely state types?
-        
+
 
         function MomentumOptimizer(momentum = nothing, sparse = false)
             this = new()
-            
+
             this.momentum = momentum
             this.sparse = sparse
 
@@ -56,7 +56,7 @@
                             "adam_beta2" => this.beta2,
                             "adam_epsilon" => this.epsilon)
             end
-        
+
             return this
         end
     end
@@ -80,7 +80,7 @@
                             "adam_beta1" => this.beta1,
                             "adam_beta2" => this.beta2)
             end
-        
+
             return this
         end
     end
@@ -97,7 +97,7 @@
             this.to_setting_kwargs = function()
                 return Dict("learning_method" => "adagrad")
             end
-        
+
             return this
         end
     end
@@ -121,7 +121,7 @@
                             "ada_rou" => this.rho,
                             "ada_epsilon" => this.epsilon)
             end
-        
+
             return this
         end
     end
@@ -144,7 +144,7 @@
                             "ada_rou" => this.rho,
                             "ada_epsilon" => this.epsilon)
             end
-        
+
             return this
         end
     end
@@ -167,7 +167,7 @@
                             "ada_rou" => this.rho,
                             "ada_epsilon" => this.epsilon)
             end
-            
+
             return this
         end
     end
@@ -281,7 +281,7 @@
         y = x.to_setting_kwargs()
         println(y["learning_method"])
         println("\n =========================== \n")
-        
+
         # ================= AdamaxOptimizer =================
         x = AdamxOptimizer(10, 20);
         println("beta1: $(x.beta1), beta2: $(x.beta2)")
@@ -338,7 +338,7 @@
         x.extra_settings()
         y = x.to_setting_kwargs()
         println("$(y["learning_method"]), $(y["ada_rou"]), $(y["ada_epsilon"])")
-        
+
     end
 
     function basic_tests_BaseRegularization()
@@ -376,7 +376,7 @@
         return dict1;
     end
 
-    function settings(batch_size;
+    function settings_f(batch_size;
                  learning_rate=1e-3,
                  learning_rate_decay_a=0.0,
                  learning_rate_decay_b=0.0,
@@ -387,12 +387,12 @@
                  is_async=false,
                  model_average=nothing,
                  gradient_clipping_threshold=nothing)
-        
+
         if isa(regularization, BaseRegularization)
             regularization = [regularization]
         end
 
-        @assert isa(learning_method, Optimizer)        
+        @assert isa(learning_method, Optimizer)
         if isa(learning_method, BaseSGDOptimizer)
             algorithm = is_async ? "async_sgd" : "sgd"
         else
@@ -434,4 +434,4 @@
         end
     end
 
-settings(10, learning_method=AdamOptimizer(), regularization = L2Regularization(0.5))
+settings_f(10, learning_method=AdamOptimizer(), regularization = L2Regularization(0.5))

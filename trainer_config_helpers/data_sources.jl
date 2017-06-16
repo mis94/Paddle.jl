@@ -1,13 +1,10 @@
-"""
-Data Sources are helpers to define paddle training data or testing data.
-"""
+### Data Sources are helpers to define paddle training data or testing data.
 
-include("default_decorators")
-include("layers")
-include("evaluators")
-include("networks")
-include("networks0")
-include("optimizers")
+include("default_decorators.jl")
+include("layers.jl")
+include("evaluators.jl")
+include("networks.jl")
+include("optimizers.jl")
 
 function define_py_data_source(file_list, cls, _module, obj, args=nothing, async=False, data_cls=PyData):
   """
@@ -47,9 +44,9 @@ function define_py_data_source(file_list, cls, _module, obj, args=nothing, async
     """
 
     if typeof(file_list) == list
-      file_list_name = 'train.list'
+      file_list_name = "train.list"
       if is(cls, TestData)
-        file_list_name = 'test.list'
+        file_list_name = "test.list"
       end
     end
 
@@ -92,7 +89,7 @@ function define_py_data_sources(train_list, test_list, _module, obj, args=nothin
     """
 
     function __is_splitable__(o)
-      (isa(o,Array) || isa(o,Tuple)) && in('__len__', o) && length(o) == 2
+      (isa(o,Array) || isa(o,Tuple)) && in("__len__", o) && length(o) == 2
     end
 
     @assert train_list != nothing || test_list != nothing
@@ -101,7 +98,7 @@ function define_py_data_sources(train_list, test_list, _module, obj, args=nothin
     test_module = _module
     train_module = _module
 
-    if __is_splitable__(obj):
+    if __is_splitable__(obj)
       train_obj = obj
       test_obj = obj
     end
@@ -124,7 +121,7 @@ function define_py_data_sources(train_list, test_list, _module, obj, args=nothin
     end
 end
 
-function define_py_data_sources2(train_list, test_list, _module, obj, args=nothing):
+function define_py_data_sources2(train_list, test_list, _module, obj, args=nothing)
     """
     Define python Train/Test data sources in one method. If train/test use
     the same Data Provider configuration, module/obj/args contain one argument,
@@ -163,9 +160,9 @@ function define_py_data_sources2(train_list, test_list, _module, obj, args=nothi
     """
 
     function py_data2(files, load_data_module, load_data_object, load_data_args,
-                   kwargs):
+                   kwargs)
       data = DataBase()
-      data.type = 'py2'
+      data.type = "py2"
       data.files = files
       data.load_data_module = load_data_module
       data.load_data_object = load_data_object

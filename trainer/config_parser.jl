@@ -364,6 +364,7 @@ function parse_config(trainer_config, config_arg_str)
 
   if config_arg_str != nothing
     config_args = Dict([split(f, '=') for f in split(config_arg_str, ',')])
+  end
 
   merge!(globals.g_command_config_args, config_args)
 
