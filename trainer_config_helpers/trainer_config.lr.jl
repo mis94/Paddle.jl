@@ -7,4 +7,57 @@ include("networks.jl")
 
 #This file should be implemented and we can test the API by running it
 
-#NOTE when calling settings() in optimizers.jl, call settings_f() instead
+dict_file = get_config_arg("dict_file", String, "./data/dict.txt")
+word_dict = Dict()
+open(dict_file) do f
+  idx = 0
+  for line in eachline(f)
+    stripped = strip(line)
+    splitted = split(stripped)
+    word_dict[splitted[1]] = idx
+    idx = idx + 1
+  end
+end
+
+is_predict = get_config_arg("is_predict", Bool, false)
+
+trn = nothing
+tst = nothing
+process = nothing
+if !is_predict
+  trn = "data/train.list"
+end
+
+if !is_predict || is_predict == nothing
+  tst = "data/test.list"
+else
+  tst = "process_predict"
+end
+
+if !is_predict
+  process = "process"
+else
+  process = "process_predict"
+end
+
+define_py_data_sources2(
+    trn,
+    tst,
+    "dataprovider_bow",
+    process,
+    Dict("dictionary"=>word_dict))
+
+batch_size = nothing
+
+if !is_predict
+  batch_size = 128
+else
+  batch_size = 1
+end
+
+settings_f(
+    batch_size,
+    learning_rate=2e-3,
+    learning_method=AdamOptimizer(),
+    regularization=L2Regularization(8e-4),
+    gradient_clipping_threshold=25)

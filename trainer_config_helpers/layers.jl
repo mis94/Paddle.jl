@@ -1,6 +1,6 @@
 include("attrs.jl")
 include("evaluators.jl")
-include("config_parser.jl")
+#include("config_parser.jl")
 include("default_decorators.jl")
 
 type LayerType

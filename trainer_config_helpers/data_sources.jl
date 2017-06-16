@@ -4,9 +4,9 @@ include("default_decorators.jl")
 include("layers.jl")
 include("evaluators.jl")
 include("networks.jl")
-include("optimizers.jl")
+#include("optimizers.jl")
 
-function define_py_data_source(file_list, cls, _module, obj, args=nothing, async=False, data_cls=PyData):
+function define_py_data_source(file_list, cls, _module, obj, args=nothing, async=False, data_cls=nothing):
   """
     Define a python data source.
 
@@ -42,8 +42,7 @@ function define_py_data_source(file_list, cls, _module, obj, args=nothing, async
     :return: nothing
     :rtype: nothing
     """
-
-    if typeof(file_list) == list
+    if isa(file_list, Array)
       file_list_name = "train.list"
       if is(cls, TestData)
         file_list_name = "test.list"
@@ -52,15 +51,14 @@ function define_py_data_source(file_list, cls, _module, obj, args=nothing, async
 
     cls(
           data_cls(
-              files=file_list,
-              load_data_module=_module,
-              load_data_object=obj,
-              load_data_args=args,
-              async_load_data=async))
+              file_list,
+              _module,
+              obj,
+              args,
+              async))
 
 end
-
-function define_py_data_sources(train_list, test_list, _module, obj, args=nothing, train_async=False, data_cls=PyData):
+function define_py_data_sources(train_list, test_list, _module, obj, args=nothing, train_async=False, data_cls=nothing)
     """
     The annotation is almost the same as define_py_data_sources2, except that
     it can specific train_async and data_cls.
@@ -97,6 +95,9 @@ function define_py_data_sources(train_list, test_list, _module, obj, args=nothin
 
     test_module = _module
     train_module = _module
+
+    test_obj = obj
+    train_obj = obj
 
     if __is_splitable__(obj)
       train_obj = obj
@@ -160,23 +161,24 @@ function define_py_data_sources2(train_list, test_list, _module, obj, args=nothi
     """
 
     function py_data2(files, load_data_module, load_data_object, load_data_args,
-                   kwargs)
+                   kwargs...)
       data = DataBase()
-      data.type = "py2"
-      data.files = files
-      data.load_data_module = load_data_module
-      data.load_data_object = load_data_object
-      data.load_data_args = load_data_args
-      data.async_load_data = true
-      data
+      globals.set_field!(data, :_type, "py2")
+      globals.set_field!(data, :files, files)
+      globals.set_field!(data, :load_data_module, load_data_module)
+      globals.set_field!(data, :load_data_object, load_data_object)
+      globals.set_field!(data, :load_data_args, load_data_args)
+      globals.set_field!(data, :async_load_data, true)
+      return data
     end
 
     define_py_data_sources(
-          train_list=train_list,
-          test_list=test_list,
-          _module = _module,
-          obj=obj,
-          args=args,
-          data_cls=py_data2)
+          train_list,
+          test_list,
+          _module,
+          obj,
+          args,
+          false,
+          py_data2)
 
 end

@@ -327,7 +327,7 @@ global_config_args = Dict()
 function get_config_arg(name, Type, default=nothing)
 
   if Type == Bool
-    s = global_config_args[name]
+    s = get(global_config_args, name, nothing)
     if s == nothing || s == false
       return default
     end
@@ -338,7 +338,7 @@ function get_config_arg(name, Type, default=nothing)
       return false
     end
   else
-    return typeof(get(global_config_args, name, default))
+    return Type(get(global_config_args, name, default))
   end
 end
 
@@ -407,13 +407,46 @@ function parse_config(trainer_config, config_arg_str)
 
 end
 
+function TrainData(data_config, async_load_data=nothing)
+  globals.g_config_funcs[string(TrainData)] =  TrainData
+  globals.set_field!(globals.g_config, :data_config, deepcopy(data_config))
+  globals.set_field!(globals.g_config.data_config, :for_test, true)
+  if async_load_data != nothing
+    globals.set_field!(globals.g_config.data_config, :async_load_data, async_load_data)
+  end
+end
+
+function TestData(data_config, async_load_data=nothing)
+  globals.g_config_funcs[string(TestData)] = TestData
+  globals.set_field!(globals.g_config, :test_data_config, deepcopy(data_config))
+  globals.set_field!(globals.g_config.test_data_config, :for_test, true)
+  if async_load_data != nothing
+    globals.set_field!(globals.g_config.test_data_config, :async_load_data, async_load_data)
+  end
+end
 
 
 
 
+function DataBase(async_load_data=false, constant_slots=nothing, data_ratio=1, is_main_data=true, usage_ratio=nothing)
+  data_config = globals.DataConfig()
+  globals.set_field!(data_config, :async_load_data, async_load_data)
 
+  if constant_slots != nothing
+    for slot in constant_slots
+      globals.add_field!(data_config, :constant_slots, slot)
+    end
+  end
+  globals.set_field!(data_config, :data_ratio, Int32(data_ratio))
+  globals.set_field!(data_config, :is_main_data, is_main_data)
 
+  if usage_ratio == nothing
+    usage_ratio = 1
+  end
+  globals.set_field!(data_config, :usage_ratio, Float64(usage_ratio))
 
+  return data_config
+end
 
 
 
