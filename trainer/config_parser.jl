@@ -272,11 +272,11 @@ function Evaluator(
   globals.g_config_funcs[string(Evaluator)] = Evaluator
 
   evaluator = globals.EvaluatorConfig()
-  globals.add_field!(globals.g_config.model_config, :evaluators, evaluator)  
+  globals.add_field!(globals.g_config.model_config, :evaluators, evaluator)
 
   globals.set_field!(evaluator, :_type, etype)
   globals.set_field!(evaluator, :name, MakeLayerNameInSubmodel(name))
-  
+
   if isa(inputs, AbstractString)
     inputs = [inputs]
   end
@@ -289,9 +289,9 @@ function Evaluator(
     globals.set_field!(evaluator, :chunk_scheme, chunk_scheme)
     globals.set_field!(evaluator, :num_chunk_types, num_chunk_types)
   end
-  
+
   globals.add_field!(globals.g_current_submodel, :evaluator_names, evaluator.name)
-  
+
   if classification_threshold != nothing
     evaluator.classification_threshold = classification_threshold
     globals.set_field!(evaluator, :classification_threshold, classification_threshold)
@@ -317,14 +317,38 @@ function Evaluator(
 
   if excluded_chunk_types != nothing
     for chunk in excluded_chunk_types
-      globals.add_field!(globals.evaluator, :excluded_chunk_types, chunk)  
+      globals.add_field!(globals.evaluator, :excluded_chunk_types, chunk)
     end
   end
 end
 
 function update_g_config()
 
-  #TODO: implement this function
+  for pair in enumerate(globals.settings)
+    pair2 = collect(pair[2])
+    k = pair2[1]
+    v = pair2[2]
+
+    if v == nothing
+      continue
+    end
+
+    globals.set_field!(globals.g_config.opt_config, :k, v)
+  end
+
+
+  for pair in enumerate(globals.trainer_settings)
+    pair2 = collect(pair[2])
+    k = pair2[1]
+    v = pair2[2]
+
+    if v == nothing
+      continue
+    end
+
+    globals.set_field!(globals.g_config.opt_config, :k, v)
+  end
+
   return globals.g_config
 end
 
@@ -336,7 +360,7 @@ function parse_config(trainer_config, config_arg_str)
 
   #make sure all proto usage is alright
 
-  globals.set_field!(globals.g_config.model_config, :_type, "nn") 
+  globals.set_field!(globals.g_config.model_config, :_type, "nn")
 
   if config_arg_str != nothing
     config_args = Dict([split(f, '=') for f in split(config_arg_str, ',')])
