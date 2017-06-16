@@ -322,6 +322,27 @@ function Evaluator(
   end
 end
 
+global_config_args = Dict()
+
+function get_config_arg(name, Type, default=nothing)
+
+  if Type == Bool
+    s = global_config_args[name]
+    if s == nothing || s == false
+      return default
+    end
+    if s == "True" || s == "1" || s == "true"
+      return true
+    end
+    if s == "False" || s == "0" || s == "false"
+      return false
+    end
+  else
+    return typeof(get(global_config_args, name, default))
+  end
+end
+
+
 function update_g_config()
 
   #TODO: implement this function
@@ -340,6 +361,7 @@ function parse_config(trainer_config, config_arg_str)
 
   if config_arg_str != nothing
     config_args = Dict([split(f, '=') for f in split(config_arg_str, ',')])
+  end
 
   merge!(globals.g_command_config_args, config_args)
 
@@ -352,6 +374,8 @@ function parse_config(trainer_config, config_arg_str)
   globals.set_field!(globals.g_root_submodel, :is_recurrent_layer_group, false)
 
   globals.g_current_submodel = globals.g_root_submodel
+
+  global_config_args = config_args
 
   include(trainer_config) #execute the file
 
