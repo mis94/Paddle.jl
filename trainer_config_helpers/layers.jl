@@ -1,7 +1,7 @@
-#include("attrs.jl")
-#include("evaluators.jl")
-#include("config_parser.jl")
-#include("default_decorators.jl")
+include("attrs.jl")
+include("evaluators.jl")
+include("config_parser.jl")
+include("default_decorators.jl")
 
 type LayerType
 
@@ -164,7 +164,7 @@ function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothin
     kwargs["width"] = width
 
     #discuss how should static method be implemented
-    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+    merge!(kwargs, to_kwargs(layer_attr))
 
     Layer(name, "data", kwargs)
 
@@ -215,9 +215,9 @@ function fc_layer(input,
     kwargs["inputs"] = inputs
 
     kwargs["size"] = size
-    kwargs["bias"] = ParamAttr.to_bias(bias_attr)
+    kwargs["bias"] = to_bias(bias_attr)
     kwargs["active_type"] = act.name
-    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+    merge!(kwargs, to_kwargs(layer_attr))
 
     Layer(name, "fc", kwargs)
 
@@ -244,7 +244,7 @@ function classificationCost(input,
 
     kwargs = Dict()
     kwargs["inputs"] = ipts
-    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+    merge!(kwargs, to_kwargs(layer_attr))
 
     Layer(name, "multi-class-cross-entropy", kwargs)
 
@@ -282,7 +282,7 @@ function maxid_layer(input; name=nothing, layer_attr=nothing)
 
     kwargs = Dict()
     kwargs["inputs"] = [input.name]
-    merge!(kwargs, ExtraLayerAttribute.to_kwargs(layer_attr))
+    merge!(kwargs, to_kwargs(layer_attr))
 
     l = Layer(name, "maxid", kwargs)
 

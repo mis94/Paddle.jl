@@ -1,4 +1,4 @@
-#include(config_parser.jl)
+include("config_parser.jl")
 
 function convert_and_compare(x, Type)
   """
@@ -195,14 +195,6 @@ type ParameterAttribute
     end
   end
 
-  function to_bias(bias_attr)
-    if typeof(bias_attr) == ParameterAttribute
-      return Bias(bias_attr.attr)
-    else
-      return false
-    end
-  end
-
 end
 
 type ExtraLayerAttribute
@@ -267,16 +259,23 @@ type ExtraLayerAttribute
     end
   end
 
-  function to_kwargs(attr)
-    if attr == nothing
-      return Dict()
-    else
-      return attr.attr
-    end
-  end
-
 end
 
+function to_bias(bias_attr)
+  if typeof(bias_attr) == ParameterAttribute
+    return Bias(bias_attr.attr)
+  else
+    return false
+  end
+end
+
+function to_kwargs(attr)
+  if attr == nothing
+    return Dict()
+  else
+    return attr.attr
+  end
+end
 
 ParamAttr = ParameterAttribute
 ExtraAttr = ExtraLayerAttribute
