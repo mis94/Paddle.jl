@@ -23,13 +23,13 @@ function evaluator_base(
     if !isa(input, Array)
         input = [input]
     end
-
+    
     if label != nothing
-        append!(input, label)
+        push!(input, label)
     end
 
     if weight != nothing
-        append!(input, weight)
+        push!(input, weight)
     end
 
 end

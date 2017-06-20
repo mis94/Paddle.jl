@@ -163,7 +163,6 @@ function data_layer(name, size; height=nothing, width=nothing, layer_attr=nothin
     kwargs["height"] = height
     kwargs["width"] = width
 
-    #discuss how should static method be implemented
     merge!(kwargs, to_kwargs(layer_attr))
 
     Layer(name, "data", kwargs)
@@ -224,23 +223,23 @@ function fc_layer(input,
     return LayerOutput(name, "fc", activation=act, size=size)
 end
 
-function classificationCost(input,
+function classification_cost(input,
                             label;
                             weight=nothing,
                             name=nothing,
                             evaluator=classification_error_evaluator,
                             layer_attr=nothing)
 
-    layer_support(string(classificationCost), input, label, weight, name, evaluator, layer_attr,
+    layer_support(string(classification_cost), input, label, weight, name, evaluator, layer_attr,
         device="device")
 
-    name = wrap_name_default("cost", string(classificationCost))
+    name = wrap_name_default("cost", string(classification_cost))
 
     @assert input.layer_type != "data"
     @assert isa(input.activation, SoftmaxActivation)
     @assert label.layer_type == "data"
 
-    ipts, parents = __cost_input__(input, label, weight)
+    ipts, parents = __cost_input__(input, label, weight=weight)
 
     kwargs = Dict()
     kwargs["inputs"] = ipts

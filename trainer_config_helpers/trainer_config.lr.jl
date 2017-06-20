@@ -1,9 +1,9 @@
-include("../trainer/config_parser.jl")
-include("data_sources.jl")
-include("optimizers.jl")
-include("layers.jl")
-include("activations.jl")
-include("networks.jl")
+#include("../trainer/config_parser.jl")
+#include("data_sources.jl")
+#include("optimizers.jl")
+#include("layers.jl")
+#include("activations.jl")
+#include("networks.jl")
 
 #This file should be implemented and we can test the API by running it
 
@@ -61,3 +61,17 @@ settings_f(
     learning_method=AdamOptimizer(),
     regularization=L2Regularization(8e-4),
     gradient_clipping_threshold=25)
+
+
+data = data_layer("word", length(word_dict))
+
+output = fc_layer(data, 2, act=SoftmaxActivation())
+
+if !is_predict
+
+  label = data_layer("label", 2)
+
+  cls = classification_cost(output, label)
+  outputs(cls)
+
+end

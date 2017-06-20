@@ -36,6 +36,7 @@ module globals
   g_submodel_map=Dict()
   g_submodel_stack=[]
   g_add_submodel_suffix=false
+  g_pass_height_width=true
   g_config_funcs=Dict()
   g_cost_map=Dict()
   g_layer_type_map=Dict()
@@ -62,7 +63,8 @@ module globals
   root_submodel=nothing,
   submodel_map=Dict(),
   submodel_stack=[],
-  add_submodel_suffix=false)
+  add_submodel_suffix=false,
+  g_pass_height_width=true)
 
   #Parameter Assignments
     g_default_momentum                     =deepcopy(default_momentum)
@@ -87,6 +89,6 @@ module globals
     g_submodel_map                         =deepcopy(submodel_map)
     g_submodel_stack                       =deepcopy(submodel_stack)
     g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
+    g_pass_height_width                    =deepcopy(g_pass_height_width)
   end
 end
-

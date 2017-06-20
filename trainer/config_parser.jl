@@ -1,7 +1,12 @@
 include(dirname(Base.source_path()) * "/globals.jl")
 using globals
 
-
+function default(x, default_value)
+  if x != nothing
+    return x
+  end
+  return default_value
+end
 
 function MakeLayerNameInSubmodel(name, submodel_name=nothing)
   if is(submodel_name, nothing) && !globals.g_add_submodel_suffix && !globals.g_current_submodel.is_recurrent_layer_group
@@ -23,6 +28,131 @@ function config_assert(b, msg)
   end
 end
 
+
+function Parameter(name,
+              size,
+              device,
+              dims;
+              learning_rate=nothing,
+              momentum=nothing,
+              decay_rate=nothing,
+              decay_rate_l1=nothing,
+              initial_mean=nothing,
+              initial_std=nothing,
+              initial_strategy=nothing,
+              initial_smart=nothing,
+              num_batches_regularization=nothing,
+              sparse_remote_update=nothing,
+              sparse_update=nothing,
+              gradient_clipping_threshold=nothing,
+              sparse=nothing,
+              format=nothing,
+              need_compact=nothing,
+              is_static=nothing,
+              is_shared=nothing,
+              update_hooks=nothing)
+
+    globals.g_config_funcs[string(Parameter)] = Parameter
+
+    para = globals.ParameterConfig()
+    globals.add_field!(globals.g_config.model_config, :parameters, para)
+
+    globals.set_field!(para, :name, name)
+    globals.set_field!(para, :size, size)
+    if device != nothing
+      globals.set_field!(para, :device, device)
+    end
+
+    for dim in dims
+      globals.add_field!(para, :dims, dim)
+    end
+
+    if learning_rate != nothing
+      globals.set_field!(para, :learning_rate, learning_rate)
+    end
+
+    momentum = default(momentum, globals.g_default_momentum)
+    if momentum != nothing
+      globals.set_field!(para, :momentum, momentum)
+    end
+
+    decay_rate = default(decay_rate, globals.g_default_decay_rate)
+    if decay_rate != nothing
+      globals.set_field!(para, :decay_rate, decay_rate)
+    end
+
+    if decay_rate_l1 != nothing
+      globals.set_field!(para, :decay_rate_l1, decay_rate_l1)
+    end
+
+    globals.set_field!(para, :initial_std, default(initial_std, globals.g_default_initial_std))
+    globals.set_field!(para, :initial_mean, default(initial_mean, globals.g_default_initial_mean))
+
+    num_batches_regularization = default(num_batches_regularization,
+                                         globals.g_default_num_batches_regularization)
+    if num_batches_regularization != nothing
+      globals.set_field!(para, :num_batches_regularization, Int32(num_batches_regularization))
+    end
+
+
+    if sparse_remote_update != nothing
+      globals(para, :sparse_remote_update, sparse_remote_update)
+      if !globals.has_field(globals.g_config, :opt_config)
+        globals.set_field!(globals.g_config, :opt_config, globals.OptimizationConfig())
+      end
+      if sparse_remote_update
+        g_config.opt_config.use_sparse_remote_updater = true
+        globals.set_field!(g_config.opt_config, :use_sparse_remote_updater, true)
+      end
+    end
+    if sparse_update != nothing
+      globals.set_field!(para, :sparse_update, sparse_update)
+    end
+
+    gradient_clipping_threshold = default(gradient_clipping_threshold,
+                                          globals.g_default_gradient_clipping_threshold)
+    if gradient_clipping_threshold != nothing
+      globals.set_field!(para, :gradient_clipping_threshold, gradient_clipping_threshold)
+    end
+
+    globals.set_field!(para, :initial_strategy, Int32(default(initial_strategy,
+                                    globals.g_default_initial_strategy)))
+    globals.set_field!(para, :initial_smart, default(initial_smart, globals.g_default_initial_smart))
+
+    if para.initial_smart
+      globals.set_field!(para, :initial_mean, 0.)
+      if length(para.dims) != 0
+        globals.set_field!(para, :initial_std, 1./sqrt(para.dims[1]))
+      else
+        para.initial_std = 1. / math.sqrt(para.size)
+      end
+    end
+
+    if sparse != nothing
+      globals.set_field!(para, :is_sparse, sparse)
+    end
+
+    if format != nothing
+      globals.set_field!(para, :format, format)
+    end
+
+    if need_compact != nothing
+      globals.set_field!(para, :need_compact, need_compact)
+    end
+
+    if is_static != nothing
+      globals.set_field!(para, :is_static, is_static)
+    end
+
+    if is_shared != nothing
+      globals.set_field!(para, :is_shared, is_shared)
+    end
+
+    #update_hooks = default(update_hooks, g_default_update_hooks)
+    globals.g_parameter_map[name] = para
+end
+
+
 function Inputs(args)
   globals.g_config_funcs[string(Inputs)] = Inputs
   for name in args
@@ -31,11 +161,11 @@ function Inputs(args)
     if globals.g_current_submodel.is_recurrent_layer_group
       config_assert(false, "Do not set Inputs in recurrent layer group")
     else
-      append!(globals.g_current_submodel.input_layer_names, name)
+      globals.add_field!(globals.g_current_submodel, :input_layer_names, name)
     end
 
     if is(globals.g_current_submodel, globals.g_root_submodel)
-      append!(globals.g_config.model_config.input_layer_names, name)
+      globals.add_field!(globals.g_config.model_config, :input_layer_names, name)
     end
 
   end
@@ -43,7 +173,7 @@ end
 
 function HasInputsSet()
   globals.g_config_funcs[string(HasInputsSet)] = HasInputsSet
-  length(globals.g_current_submodel.input_layer_name) != 0
+  return globals.has_field(globals.g_current_submodel, :input_layer_names) && length(globals.g_current_submodel.input_layer_names) != 0
 end
 
 function Outputs(args)
@@ -54,23 +184,47 @@ function Outputs(args)
     if globals.g_current_submodel.is_recurrent_layer_group
       config_assert(false, "Do not set Outputs in recurrent layer group")
     else
-      append!(globals.g_current_submodel.output_layer_names, name)
+      globals.add_field!(globals.g_current_submodel, :output_layer_names, name)
     end
 
     if is(globals.g_current_submodel, globals.g_root_submodel)
-      append!(globals.g_config.model_config.output_layer_names, name)
+      globals.add_field!(globals.g_config.model_config, :output_layer_names, name)
     end
-
   end
 end
 
 function Layer(name, layerType, kwargs)
   globals.g_config_funcs[string(Layer)] = Layer
-  layers = Dict()
-  merge!(layers, globals.g_cost_map, globals.g_layer_type_map)
-  layer_func = layers[layerType]
-  config_assert(layer_func, "layer type " * layerType * " not supported")
-  return layer_func(name, kwargs)
+
+  if layerType == "data"
+    layerBase = LayerBase(name, "data", kwargs["size"], [], device=nothing)
+    if kwargs["height"] != nothing && kwargs["height"] != 0 && kwargs["width"] != nothing && kwargs["width"] != 0
+      layerBase.set_layer_height_width(kwargs["height"], kwargs["width"])
+    end
+  elseif layerType == "fc"
+    layerBase = LayerBase(name, "fc", kwargs["size"], kwargs["inputs"], device=nothing, active_type=kwargs["active_type"])
+    for input_index in 1:length(kwargs["inputs"])
+      input_layer = layerBase.get_input_layer(input_index)
+      psize = layerBase.config.size * input_layer.size
+      dims = [input_layer.size, layerBase.config.size]
+      format = layerBase.inputs[input_index].locals["format"]
+      sparse = false
+      if format == "csr" || format == "csc"
+        sparse = true
+      end
+      if sparse
+        psize = layerBase.inputs[input_index].nnz
+      else
+        spase = nothing
+      end
+      layerBase.create_input_parameter(input_index, psize, dims, sparse, format)
+    end
+    layerBase.create_bias_parameter(kwargs["bias"], layerBase.config.size)
+  elseif layerType == "multi-class-cross-entropy"
+    LayerBase(name, "multi-class-cross-entropy", 1, kwargs["inputs"], coeff=1.)
+  end
+
+  #config_assert(layer_func, "layer type " * layerType * " not supported")
 end
 
 type Bias
@@ -185,6 +339,28 @@ type Input
   end
 end
 
+type Operator
+  _type
+  operator_conf
+  calc_output_size::Function
+
+  function Operator(input_layer_name)
+
+    globals.g_config_funcs[string(Input)] = Input
+
+    this = new()
+    this._type = nothing
+    this.operator_conf = globals.OperatorConfig()
+    this.operator_conf._type = this._type
+
+    this.calc_output_size = function(input_size)
+      return 0
+    end
+
+    return this
+  end
+end
+
 function default_momentum(val)
   globals.g_config_funcs[string(default_momentum)] = default_momentum
   #globals.g_default_momentum = val
@@ -220,26 +396,26 @@ settings  =  Dict(
     "learning_rate_args" => "",
     "l1weight" => 0.1,
     "l2weight" => 0.,
-    "l2weight_zero_iter" => 0,
+    "l2weight_zero_iter" => Int32(0),
     "c1" => 0.0001,
     "backoff" => 0.5,
-    "owlqn_steps" => 10,
-    "max_backoff" => 5,
-    "average_window" => 0,
+    "owlqn_steps" => Int32(10),
+    "max_backoff" => Int32(5),
+    "average_window" => 0.,
     "do_average_in_cpu" => false,
     "max_average_window" => nothing,
     "ada_epsilon" => 1e-6,
     "ada_rou" => 0.95,
     "delta_add_rate" => 1.0,
-    "shrink_parameter_value" => 0,
+    "shrink_parameter_value" => 0.,
     "adam_beta1" => 0.9,
     "adam_beta2" => 0.999,
     "adam_epsilon" => 1e-8)
 
 trainer_settings = Dict(
     "save_dir" => "./output/model",
-    "init_model_path" => "nothing",
-    "start_pass" => 0)
+    "init_model_path" => nothing,
+    "start_pass" => Int32(0))
 
 
 function Settings(;kwargs...)
@@ -344,8 +520,10 @@ end
 
 
 function update_g_config()
-
-  for pair in enumerate(globals.settings)
+  if !globals.has_field(globals.g_config, :opt_config)
+    globals.set_field!(globals.g_config, :opt_config, globals.OptimizationConfig())
+  end
+  for pair in enumerate(settings)
     pair2 = collect(pair[2])
     k = pair2[1]
     v = pair2[2]
@@ -353,12 +531,11 @@ function update_g_config()
     if v == nothing
       continue
     end
-
-    globals.set_field!(globals.g_config.opt_config, :k, v)
+    globals.set_field!(globals.g_config.opt_config, Symbol(k), v)
   end
 
 
-  for pair in enumerate(globals.trainer_settings)
+  for pair in enumerate(trainer_settings)
     pair2 = collect(pair[2])
     k = pair2[1]
     v = pair2[2]
@@ -367,7 +544,7 @@ function update_g_config()
       continue
     end
 
-    globals.set_field!(globals.g_config.opt_config, :k, v)
+    globals.set_field!(globals.g_config, Symbol(k), v)
   end
 
   return globals.g_config
@@ -380,7 +557,7 @@ function parse_config(trainer_config, config_arg_str)
   config_args = Dict()
 
   #make sure all proto usage is alright
-
+  globals.set_field!(globals.g_config, :model_config, globals.ModelConfig())
   globals.set_field!(globals.g_config.model_config, :_type, "nn")
 
   if config_arg_str != nothing
@@ -389,15 +566,15 @@ function parse_config(trainer_config, config_arg_str)
 
   merge!(globals.g_command_config_args, config_args)
 
-  globals.g_root_submodel = globals.SubModelConfig()
-
-  globals.set_field!(globals.g_config, :model_config, globals.ModelConfig())
+  #globals.g_root_submodel = globals.SubModelConfig()
+  eval(globals, :(g_root_submodel = SubModelConfig()))
 
   globals.add_field!(globals.g_config.model_config, :sub_models, globals.g_root_submodel)
   globals.set_field!(globals.g_root_submodel, :name, "root")
   globals.set_field!(globals.g_root_submodel, :is_recurrent_layer_group, false)
 
-  globals.g_current_submodel = globals.g_root_submodel
+  #globals.g_current_submodel = globals.g_root_submodel
+  eval(globals, :(g_current_submodel = g_root_submodel))
 
   global_config_args = config_args
 
@@ -448,9 +625,234 @@ function DataBase(async_load_data=false, constant_slots=nothing, data_ratio=1, i
   return data_config
 end
 
+type LayerBase
+  name
+  Type
+  size
+  inputs
+  device
+  active_type
+  drop_rate
+  coeff
+  config
+  operators
+  get_input_layer::Function
+  set_layer_height_width::Function
+  create_input_parameter::Function
+  create_bias_parameter::Function
+
+  function LayerBase(name, Type, size, inputs; device=nothing, active_type="", drop_rate=0., coeff=nothing)
+    this = new()
+    this.get_input_layer = function(input_index)
+      #println(this.config.inputs[input_index].input_layer_name)
+      return globals.g_layer_map[this.config.inputs[input_index].input_layer_name]
+    end
+    this.set_layer_height_width = function(height, width)
+          this.config.height = height
+          this.config.width = width
+    end
+
+    this.create_input_parameter = function(input_index, size, dims=nothing, sparse=nothing, format=nothing)
+      if dims == nothing
+        dims = []
+      end
+
+      if size == 0
+        return
+      end
+
+      input_config = this.inputs[input_index]
+
+      globals.set_field!(this.config.inputs[input_index], :input_parameter_name, input_config.locals["parameter_name"])
+      if in(globals.g_parameter_map, input_config.locals["parameter_name"])
+        return
+      end
+
+      temp_device = nothing
+      if globals.has_field(this.config, :device)
+        temp_device = this.config.device
+      end
+
+      Parameter(
+              input_config.locals["parameter_name"],
+              size,
+              temp_device,
+              dims,
+              learning_rate = input_config.locals["learning_rate"],
+              momentum = input_config.locals["momentum"],
+              decay_rate=input_config.locals["decay_rate"],
+              decay_rate_l1=input_config.locals["decay_rate_l1"],
+              initial_mean=input_config.locals["initial_mean"],
+              initial_std=input_config.locals["initial_std"],
+              initial_strategy=input_config.locals["initial_strategy"],
+              initial_smart=input_config.locals["initial_smart"],
+              num_batches_regularization=input_config.locals["num_batches_regularization"],
+              sparse_remote_update=input_config.locals["sparse_remote_update"],
+              sparse_update=input_config.locals["sparse_update"],
+              gradient_clipping_threshold=input_config.locals["gradient_clipping_threshold"],
+              sparse=sparse,
+              format=format,
+              is_static=input_config.locals["is_static"],
+              is_shared=input_config.locals["is_shared"],
+              update_hooks=input_config.locals["update_hooks"])
+
+    end
+
+    this.create_bias_parameter = function(bias, size, dims = nothing, for_self = true)
+      if size == 0
+          return
+      end
+      if dims == nothing
+          dims = [1, size]
+      end
+
+      if typeof(bias) == Bool
+          if bias
+              bias = Bias()
+          end
+      end
+
+      if typeof(bias) == Bias
+          if bias.locals["parameter_name"] == nothing
+              bias.locals["parameter_name"] = "_" * this.config.name * ".wbias"
+          end
+          if !in(globals.g_parameter_map, bias.locals["parameter_name"])
+
+            temp_device = nothing
+            if globals.has_field(this.config, :device)
+              temp_device = this.config.device
+            end
+            Parameter(
+                bias.locals["parameter_name"],
+                size,
+                temp_device,
+                dims,
+                learning_rate=bias.locals["learning_rate"],
+                momentum=bias.locals["momentum"],
+                decay_rate=bias.locals["decay_rate"],
+                decay_rate_l1=bias.locals["decay_rate_l1"],
+                initial_mean=bias.locals["initial_mean"],
+                initial_std=bias.locals["initial_std"],
+                initial_strategy=bias.locals["initial_strategy"],
+                initial_smart=bias.locals["initial_smart"],
+                num_batches_regularization=bias.locals["num_batches_regularization"],
+                sparse_remote_update=bias.locals["sparse_remote_update"],
+                gradient_clipping_threshold=bias.locals["gradient_clipping_threshold"],
+                is_static=bias.locals["is_static"],
+                is_shared=bias.locals["is_shared"] )
+          end
+          if for_self
+              globals.set_field!(this.config, :bias_parameter_name, bias.locals["parameter_name"])
+          else
+              return bias.locals["parameter_name"]
+          end
+      end
+    end
+
+    this.name = name
+    this.Type = Type
+    this.size = size
+    this.device = device
+    this.active_type = active_type
+    this.drop_rate = drop_rate
+    this.coeff = coeff
+
+    this.name = MakeLayerNameInSubmodel(this.name) #verify
+    this.inputs = deepcopy(inputs)
+    this.operators = []
+
+    if this.inputs == nothing
+      this.inputs = []
+    elseif !isa(this.inputs, Array)
+      this.inputs = [inputs]
+    end
+    this.inputs = Array{Any}(this.inputs)
 
 
+    this.config = globals.LayerConfig()
+    globals.add_field!(globals.g_config.model_config, :layers, this.config)
 
+    this.config.name = name
+    this.config._type = Type
+    this.config.active_type = active_type
+
+    if coeff != nothing
+      this.config.coeff = Float32(coeff)
+    end
+
+    if this.size != 0
+      this.config.size = size
+    end
+
+    if this.drop_rate != 0
+      this.config.drop_rate = drop_rate
+    end
+
+    if this.device != nothing
+      this.config.device = device
+    elseif globals.g_default_device != nothing
+      globals.set_field!(this.config, :device, globals.g_default_device)
+    end
+
+    #println(this.inputs)
+
+    for input_index in 1:length(this.inputs)
+      input = this.inputs[input_index]
+      input_config = nothing
+      input_layer_name = ""
+
+      p_name = "_" * name * ",w" * string(input_index)
+      if typeof(input) == String
+          input_layer_name = input
+          input_config = Input(
+              input,
+              Dict("parameter_name"=>p_name))
+          input_layer_name = input_config.input_layer_name
+      elseif isa(input, Input)
+        input_layer_name = input.input_layer_name
+        input_config = input
+        if input_config.locals["parameter_name"] == nothing
+          input_config.locals["parameter_name"] = p_name
+        end
+      elseif isa(input, Operator)
+        append!(this.operators, input)
+        globals.add_field!(input.operator_conf,:input_indices, input_index)
+        input_config = Input(input.input_layer_name[0])
+        input_layer_name = input_config.input_layer_name
+      end
+
+      this.inputs[input_index] = input_config
+
+      # layer_input = self.config.inputs.add()
+      layer_input = globals.LayerInputConfig()
+      globals.add_field!(this.config, :inputs, layer_input)
+
+      layer_input.input_layer_name = input_config.input_layer_name
+      if input_config.locals["input_layer_argument"] != nothing
+          layer_input.input_layer_argument = input_config.input_layer_argument
+      end
+    end
+    globals.g_layer_map[name] = this.config
+    #globals.g_current_submodel.layer_names.append(this.config.name)
+
+    globals.add_field!(globals.g_current_submodel, :layer_names, this.config.name)
+
+    if this.config._type != "data" && globals.g_pass_height_width
+          #println(this.get_input_layer(1))
+          height = this.get_input_layer(1).height
+          width = this.get_input_layer(1).width
+          if height != nothing && height != 0 && width != nothing && width != 0
+              this.set_layer_height_width(height, width)
+          end
+    end
+
+    return this
+  end
+
+end
+
+#parse_config("Osama", "dict_file=kosomakkosomak")
+#layerbase = LayerBase("name", "type",5, "name", 3, "qwuihiusksa", 0.25, 956)
 
 
 

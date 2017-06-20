@@ -90,7 +90,7 @@ function outputs(layers, args...)
   end
 
   final_inputs = []
-  final_outputs =
+  final_outputs = []
 
   for each_input in inputs
     @assert isa(each_input, LayerOutput)
@@ -99,8 +99,8 @@ function outputs(layers, args...)
     end
   end
 
-  for each_out in outputs
-    @assert isa(each_out, LayerOutput)
+  for each_output in outputs
+    @assert isa(each_output, LayerOutput)
     if !(each_output.name in final_outputs)
       final_outputs = vcat(final_outputs, each_output.name)
     end

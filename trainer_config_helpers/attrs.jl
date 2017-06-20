@@ -18,7 +18,7 @@ function is_compatible_with(x, Type)
   :param Type: target type to check x over
 
   """
-  if typeof(x) == Type
+  if isa(x, Type)
     return true
   end
 
@@ -101,7 +101,7 @@ type ParameterAttribute
   sparse_update
   attr
 
-  function ParameterAttribute(name = nothing
+  function ParameterAttribute(;name = nothing
                             , is_static = false
                             , initial_std = nothing
                             , initial_mean = nothing

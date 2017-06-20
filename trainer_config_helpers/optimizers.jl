@@ -389,7 +389,6 @@ function settings_f(batch_size;
              is_async=false,
              model_average=nothing,
              gradient_clipping_threshold=nothing)
-    print("*************************************************************************************")
     if isa(regularization, BaseRegularization)
         regularization = [regularization]
     end
