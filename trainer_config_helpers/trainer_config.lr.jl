@@ -54,7 +54,7 @@ if !is_predict
 else
   batch_size = 1
 end
-
+#println(batch_size)
 settings_f(
     batch_size,
     learning_rate=2e-3,
@@ -72,9 +72,6 @@ if !is_predict
   label = data_layer("label", 2)
 
   cls = classification_cost(output, label)
-  println("____________________________________________________________")
-  println(cls)
-  println("____________________________________________________________")
 
   outputs(cls)
 

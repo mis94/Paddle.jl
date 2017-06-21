@@ -155,22 +155,17 @@ end
 
 function Inputs(args)
   globals.g_config_funcs[string(Inputs)] = Inputs
-  println("0000000000000000000000000000000000000000000000")
-  println(args)
-  for name in args
 
+  for name in args
     name = MakeLayerNameInSubmodel(name)
 
-    #println(globals.g_current_submodel.is_recurrent_layer_group)
     if globals.g_current_submodel.is_recurrent_layer_group
       config_assert(false, "Do not set Inputs in recurrent layer group")
     else
-      #println("00000000000000000000000000000000000000000000000000")
       globals.add_field!(globals.g_current_submodel, :input_layer_names, name)
     end
 
     if is(globals.g_current_submodel, globals.g_root_submodel)
-      #println("00000000000000000000000000000000000000000000000000")
       globals.add_field!(globals.g_config.model_config, :input_layer_names, name)
     end
 
@@ -425,7 +420,7 @@ trainer_settings = Dict(
     "start_pass" => Int32(0))
 
 
-function Settings(;kwargs...)
+function Settings(kwargs)
   for arg in kwargs
     k = string(arg[1])
     v = arg[2]
@@ -652,7 +647,6 @@ type LayerBase
   function LayerBase(name, Type, size, inputs; device=nothing, active_type="", drop_rate=0., coeff=nothing)
     this = new()
     this.get_input_layer = function(input_index)
-      #println(this.config.inputs[input_index].input_layer_name)
       return globals.g_layer_map[this.config.inputs[input_index].input_layer_name]
     end
     this.set_layer_height_width = function(height, width)
@@ -794,7 +788,6 @@ type LayerBase
       globals.set_field!(this.config, :device, globals.g_default_device)
     end
 
-    #println(this.inputs)
     globals.set_field!(this.config, :inputs, Array{globals.LayerInputConfig, 1}([]) )
     for input_index in 1:length(this.inputs)
       input = this.inputs[input_index]
@@ -839,7 +832,6 @@ type LayerBase
     globals.add_field!(globals.g_current_submodel, :layer_names, this.config.name)
 
     if this.config._type != "data" && globals.g_pass_height_width
-          #println(this.get_input_layer(1))
           height = this.get_input_layer(1).height
           width = this.get_input_layer(1).width
           if height != nothing && height != 0 && width != nothing && width != 0

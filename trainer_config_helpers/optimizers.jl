@@ -402,7 +402,7 @@ function settings_f(batch_size;
 
     kwargs = Dict()
     kwargs["algorithm"] = algorithm
-    kwargs["batch_size"] = batch_size
+    kwargs["batch_size"] = Int32(batch_size)
     kwargs["learning_rate"] = learning_rate
     kwargs["learning_rate_decay_a"] = learning_rate_decay_a
     kwargs["learning_rate_decay_b"] = learning_rate_decay_b
@@ -432,6 +432,6 @@ function settings_f(batch_size;
             each.extra_settings()
         end
     end
-end
 
-settings_f(10, learning_method=AdamOptimizer(), regularization = L2Regularization(0.5))
+    Settings(kwargs)
+end

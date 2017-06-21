@@ -47,30 +47,20 @@ function outputs(layers, args...)
     retv = []
     if layer.parents != nothing
       for p in layer.parents
-        #println("*************************************************")
-        #println(p)
         append!(retv, __dfs_travel__(p, predicate))
       end
     end
 
     if predicate(layer)
-      #println("*************************************************")
-      #println(layer)
       push!(retv, layer)
     end
 
-    #println("||||||||||||||||||||||||||||||||||||||||||"
-    #println(retv)
     return retv
   end
 
   if isa(layers, LayerOutput)
     layers = [layers]
   end
-
-  println("||||||||||||||||||||||||||||||||||||||||||")
-  println(layers[1].layer_type)
-
 
   if length(args) != 0
     append!(layers, args)
