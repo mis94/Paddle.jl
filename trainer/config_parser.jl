@@ -112,7 +112,7 @@ function Parameter(name,
     gradient_clipping_threshold = default(gradient_clipping_threshold,
                                           globals.g_default_gradient_clipping_threshold)
     if gradient_clipping_threshold != nothing
-      globals.set_field!(para, :gradient_clipping_threshold, gradient_clipping_threshold)
+      globals.set_field!(para, :gradient_clipping_threshold, Float64(gradient_clipping_threshold))
     end
 
     globals.set_field!(para, :initial_strategy, Int32(default(initial_strategy,
@@ -155,16 +155,22 @@ end
 
 function Inputs(args)
   globals.g_config_funcs[string(Inputs)] = Inputs
+  println("0000000000000000000000000000000000000000000000")
+  println(args)
   for name in args
 
     name = MakeLayerNameInSubmodel(name)
+
+    #println(globals.g_current_submodel.is_recurrent_layer_group)
     if globals.g_current_submodel.is_recurrent_layer_group
       config_assert(false, "Do not set Inputs in recurrent layer group")
     else
+      #println("00000000000000000000000000000000000000000000000000")
       globals.add_field!(globals.g_current_submodel, :input_layer_names, name)
     end
 
     if is(globals.g_current_submodel, globals.g_root_submodel)
+      #println("00000000000000000000000000000000000000000000000000")
       globals.add_field!(globals.g_config.model_config, :input_layer_names, name)
     end
 
@@ -368,9 +374,10 @@ function default_momentum(val)
 end
 
 function default_decay_rate(val)
-    globals.g_config_funcs[string(default_decay_rate)] = default_decay_rate
-    #globals.g_default_decay_rate = val
-    globals.set_default_momentum(val)
+  globals.g_config_funcs[string(default_decay_rate)] = default_decay_rate
+  #globals.g_default_decay_rate = val
+  globals.set_default_decay_rate(val)
+  return
 
 end
 
@@ -445,6 +452,7 @@ function Evaluator(
         top_k=nothing,
         delimited=nothing,
         excluded_chunk_types=nothing)
+
   globals.g_config_funcs[string(Evaluator)] = Evaluator
 
   evaluator = globals.EvaluatorConfig()
@@ -749,22 +757,14 @@ type LayerBase
       end
     end
 
-    this.name = name
-    this.Type = Type
-    this.size = size
-    this.device = device
-    this.active_type = active_type
-    this.drop_rate = drop_rate
-    this.coeff = coeff
-
-    this.name = MakeLayerNameInSubmodel(this.name) #verify
+    name = MakeLayerNameInSubmodel(name) #verify
     this.inputs = deepcopy(inputs)
     this.operators = []
 
     if this.inputs == nothing
       this.inputs = []
     elseif !isa(this.inputs, Array)
-      this.inputs = [inputs]
+      this.inputs = [this.inputs]
     end
     this.inputs = Array{Any}(this.inputs)
 
@@ -772,37 +772,37 @@ type LayerBase
     this.config = globals.LayerConfig()
     globals.add_field!(globals.g_config.model_config, :layers, this.config)
 
-    this.config.name = name
-    this.config._type = Type
-    this.config.active_type = active_type
+    globals.set_field!(this.config, :name, name)
+    globals.set_field!(this.config, :_type, Type)
+    globals.set_field!(this.config, :active_type, active_type)
 
     if coeff != nothing
-      this.config.coeff = Float32(coeff)
+      globals.set_field!(this.config, :coeff, Float64(coeff))
     end
 
-    if this.size != 0
-      this.config.size = size
+    if size != 0
+      globals.set_field!(this.config, :size, UInt64(size))
     end
 
-    if this.drop_rate != 0
-      this.config.drop_rate = drop_rate
+    if drop_rate != 0
+      globals.set_field!(this.config, :drop_rate, drop_rate)
     end
 
-    if this.device != nothing
-      this.config.device = device
+    if device != nothing
+      globals.set_field!(this.config, :device, device)
     elseif globals.g_default_device != nothing
       globals.set_field!(this.config, :device, globals.g_default_device)
     end
 
     #println(this.inputs)
-
+    globals.set_field!(this.config, :inputs, Array{globals.LayerInputConfig, 1}([]) )
     for input_index in 1:length(this.inputs)
       input = this.inputs[input_index]
       input_config = nothing
       input_layer_name = ""
 
-      p_name = "_" * name * ",w" * string(input_index)
-      if typeof(input) == String
+      p_name = "_" * name * ".w" * string(input_index)
+      if isa(input, AbstractString)
           input_layer_name = input
           input_config = Input(
               input,
@@ -815,9 +815,9 @@ type LayerBase
           input_config.locals["parameter_name"] = p_name
         end
       elseif isa(input, Operator)
-        append!(this.operators, input)
-        globals.add_field!(input.operator_conf,:input_indices, input_index)
-        input_config = Input(input.input_layer_name[0])
+        push!(this.operators, input)
+        globals.add_field!(input.operator_conf, :input_indices, input_index)
+        input_config = Input(input.input_layer_name[1])
         input_layer_name = input_config.input_layer_name
       end
 
@@ -827,9 +827,10 @@ type LayerBase
       layer_input = globals.LayerInputConfig()
       globals.add_field!(this.config, :inputs, layer_input)
 
-      layer_input.input_layer_name = input_config.input_layer_name
-      if input_config.locals["input_layer_argument"] != nothing
-          layer_input.input_layer_argument = input_config.input_layer_argument
+      globals.set_field!(layer_input, :input_layer_name, input_config.input_layer_name)
+
+      if input_config.locals["input_layer_argument"] != nothing #add locals dictionary to Operator class
+          globals.set_field!(layer_input, :input_layer_argument, input_config.locals["input_layer_argument"])
       end
     end
     globals.g_layer_map[name] = this.config
@@ -851,7 +852,6 @@ type LayerBase
 
 end
 
-#parse_config("Osama", "dict_file=kosomakkosomak")
 #layerbase = LayerBase("name", "type",5, "name", 3, "qwuihiusksa", 0.25, 956)
 
 

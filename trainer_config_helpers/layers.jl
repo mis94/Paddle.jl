@@ -125,11 +125,17 @@ type LayerOutput
 
         this.name = name
         this.layer_type = layer_type
+
         if !isa(parents, Void) && !isa(parents, Array)
             this.parents = [parents]
-        else
-            this.parents = []
         end
+
+        if parents == nothing
+          this.parents = []
+        else
+          this.parents = parents
+        end
+
         this.activation = activation
         this.num_filters = num_filters
         this.img_norm_type = img_norm_type
@@ -220,7 +226,7 @@ function fc_layer(input,
 
     Layer(name, "fc", kwargs)
 
-    return LayerOutput(name, "fc", activation=act, size=size)
+    return LayerOutput(name, "fc",parents=input, activation=act, size=size)
 end
 
 function classification_cost(input,
@@ -249,7 +255,7 @@ function classification_cost(input,
 
     function __add_evaluator__(e)
         @assert isa(e, Function)
-        e(input, label, name=string(evaluator), weight=weight)
+        e(input, label, name=string(e), weight=weight)
     end
 
     if !isa(evaluator, Array) && !isa(evaluator, Tuple)
@@ -264,9 +270,9 @@ function classification_cost(input,
 end
 
 function __cost_input__(input, label; weight=nothing)
-    ipts = [Input(input.name), Input(input.name)]
+    ipts = [Input(input.name), Input(label.name)]
     parents = [input, label]
-    if !isa(weight, Void)
+    if weight != nothing
         @assert weight.layer_type == "data"
         push!(ipts, Input(weight.name))
         push!(parents, weight)

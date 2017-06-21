@@ -19,7 +19,7 @@ type MomentumOptimizer <: BaseSGDOptimizer
         this.sparse = sparse
 
         this.extra_settings = function ()
-            #TODO default_momentum(self.momentum)
+            default_momentum(this.momentum)
         end
 
         this.to_setting_kwargs = function ()
@@ -196,7 +196,7 @@ type L2Regularization <: BaseRegularization
 
         this.extra_settings = function ()
             if this.algorithm == "sgd" || this.algorithm == "async_sgd"
-                #TODO default_decay_rate(self.decay_rate)
+                default_decay_rate(this.decay_rate)
             end
         end
 
@@ -250,7 +250,7 @@ type GradientClippingThreshold <: Optimizer
         end
 
         this.extra_settings = function ()
-            #TODO default_gradient_clipping_threshold(self.threshold)
+            default_gradient_clipping_threshold(this.threshold)
         end
 
         return this

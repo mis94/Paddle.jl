@@ -1,4 +1,4 @@
-include(dirname(Base.source_path()) * "/../trainer/config_parser.jl")
+#include(dirname(Base.source_path()) * "/../trainer/config_parser.jl")
 using globals
 
 
@@ -41,20 +41,26 @@ network, this method will calculate the input order by dfs travel.
 :return:
 """
 function outputs(layers, args...)
+
   function __dfs_travel__(layer, predicate = x -> x.layer_type == "data") #TODO: Change hardcoded "DATA" to LayerType.DATA
     @assert isa(layer, LayerOutput) @sprintf("layer is %s", layer)
     retv = []
-
     if layer.parents != nothing
       for p in layer.parents
-        retv = vcat(__dfs_travel__(p, predicate))
+        #println("*************************************************")
+        #println(p)
+        append!(retv, __dfs_travel__(p, predicate))
       end
     end
 
     if predicate(layer)
-      retv = vcat(retv, layer)
+      #println("*************************************************")
+      #println(layer)
+      push!(retv, layer)
     end
 
+    #println("||||||||||||||||||||||||||||||||||||||||||"
+    #println(retv)
     return retv
   end
 
@@ -62,8 +68,12 @@ function outputs(layers, args...)
     layers = [layers]
   end
 
+  println("||||||||||||||||||||||||||||||||||||||||||")
+  println(layers[1].layer_type)
+
+
   if length(args) != 0
-    layers = vcat(layers, args)
+    append!(layers, args)
   end
 
   @assert length(layers) > 0
@@ -85,8 +95,8 @@ function outputs(layers, args...)
 
   for each_layer in layers
     @assert isa(each_layer, LayerOutput)
-    inputs = vcat(inputs, __dfs_travel__(each_layer))
-    outputs = vcat(outputs, __dfs_travel__(each_layer, x -> x.layer_type == "cost")) #TODO: Change hardcoded "COST" to LayerType.COST
+    append!(inputs, __dfs_travel__(each_layer))
+    append!(outputs, __dfs_travel__(each_layer, x -> x.layer_type == "cost")) #TODO: Change hardcoded "COST" to LayerType.COST
   end
 
   final_inputs = []
@@ -95,14 +105,14 @@ function outputs(layers, args...)
   for each_input in inputs
     @assert isa(each_input, LayerOutput)
     if !(each_input.name in final_inputs)
-      final_inputs = vcat(final_inputs, each_input.name)
+      push!(final_inputs, each_input.name)
     end
   end
 
   for each_output in outputs
     @assert isa(each_output, LayerOutput)
     if !(each_output.name in final_outputs)
-      final_outputs = vcat(final_outputs, each_output.name)
+      push!(final_outputs, each_output.name)
     end
   end
 

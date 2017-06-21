@@ -72,6 +72,10 @@ if !is_predict
   label = data_layer("label", 2)
 
   cls = classification_cost(output, label)
+  println("____________________________________________________________")
+  println(cls)
+  println("____________________________________________________________")
+
   outputs(cls)
 
 end

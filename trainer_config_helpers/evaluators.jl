@@ -23,7 +23,7 @@ function evaluator_base(
     if !isa(input, Array)
         input = [input]
     end
-    
+
     if label != nothing
         push!(input, label)
     end
@@ -31,6 +31,19 @@ function evaluator_base(
     if weight != nothing
         push!(input, weight)
     end
+    inputs = [i.name for i in input]
+    Evaluator(
+          name,
+          etype,
+          inputs,
+          chunk_scheme=chunk_scheme,
+          num_chunk_types=num_chunk_types,
+          classification_threshold=classification_threshold,
+          positive_label=positive_label,
+          dict_file=dict_file,
+          result_file=result_file,
+          delimited=delimited,
+          excluded_chunk_types=excluded_chunk_types, )
 
 end
 
@@ -50,4 +63,3 @@ function classification_error_evaluator(
         top_k=top_k,
         classification_threshold=threshold)
 end
-classification_error_evaluator(1, 1)

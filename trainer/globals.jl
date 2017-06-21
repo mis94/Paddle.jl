@@ -53,7 +53,7 @@ module globals
   default_device=nothing,
   default_update_hooks=nothing,
   default_compact_func=nothing,
-  config=TrainerConfig,
+  config=TrainerConfig(),
   layer_map=Dict(),
   parameter_map=Dict(),
   extended_config_funcs=Dict(),
@@ -64,7 +64,31 @@ module globals
   submodel_map=Dict(),
   submodel_stack=[],
   add_submodel_suffix=false,
-  g_pass_height_width=true)
+  pass_height_width=true)
+
+    global g_default_momentum
+    global g_default_decay_rate
+    global g_default_initial_mean
+    global g_default_initial_std
+    global g_default_num_batches_regularization
+    global g_default_initial_strategy
+    global g_default_initial_smart
+    global g_default_gradient_clipping_threshold
+    global g_default_device
+    global g_default_update_hooks
+    global g_default_compact_func
+    global g_config
+    global g_layer_map
+    global g_parameter_map
+    global g_extended_config_funcs
+    global g_command_config_args
+    global g_py_module_name_list
+    global g_current_submodel
+    global g_root_submodel
+    global g_submodel_map
+    global g_submodel_stack
+    global g_add_submodel_suffix
+    global g_pass_height_width
 
   #Parameter Assignments
     g_default_momentum                     =deepcopy(default_momentum)
@@ -89,6 +113,20 @@ module globals
     g_submodel_map                         =deepcopy(submodel_map)
     g_submodel_stack                       =deepcopy(submodel_stack)
     g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
-    g_pass_height_width                    =deepcopy(g_pass_height_width)
+    g_pass_height_width                    =deepcopy(pass_height_width)
+  end
+
+
+  function set_default_decay_rate(val)
+    global g_default_decay_rate
+    g_default_decay_rate = val
+  end
+  function set_default_gradient_clipping_threshold(val)
+    global g_default_gradient_clipping_threshold
+    g_default_gradient_clipping_threshold = val
+  end
+  function set_default_momentum(val)
+    global g_default_momentum
+    g_default_momentum = val
   end
 end
