@@ -54,26 +54,26 @@ function main()
     println(use_gpu)
     println(train_data)
 
-    #api.initPaddle("--use_gpu=0", "--trainer_count=2")
-    #
-    #trainer_config = parse_config("../trainer_config_helpers/trainer_config.lr.jl", "dict_file=../trainer_config_helpers/data/dict.txt")
-#
-#    #globals.clear(trainer_config, :data_config)
-#    #globals.clear(trainer_config, :test_data_config)
-#
-#    ##println(trainer_config.model_config)
-#    #println("===================================================================")
-#
-#    #model = api.GradientMachine[:createFromConfigProto](parse(dirname(Base.source_path()) * "/parser/api_train/" * "model", trainer_config.model_config))
-#    #
-#    ## create a trainer for the gradient machine
-    #trainer = api.Trainer[:create](parse(dirname(Base.source_path()) * "/parser/api_train/" * "trainer", trainer_config), model)
+    api.initPaddle("--use_gpu=" * use_gpu, "--trainer_count=" * trainer_count)
+    
+    trainer_config = parse_config(config, "dict_file=" * dict_file)
 
-    #input_types = [
-    #    integer_value_sequence(len(word_dict)) if options.seq else
-    #    sparse_binary_vector(len(word_dict)), integer_value(2)
-    #]
-    #converter = DataProviderConverter(input_types)
+    globals.clear(trainer_config, :data_config)
+    globals.clear(trainer_config, :test_data_config)
+
+    #println(trainer_config.model_config)
+    #println("===================================================================")
+
+    model = api.GradientMachine[:createFromConfigProto](parse(dirname(Base.source_path()) * "/parser/api_train/" * "model", trainer_config.model_config))
+    
+    ## create a trainer for the gradient machine
+    trainer = api.Trainer[:create](parse(dirname(Base.source_path()) * "/parser/api_train/" * "trainer", trainer_config), model)
+
+    input_types = [
+        integer_value_sequence(length(word_dict)) if seq else
+        sparse_binary_vector(length(word_dict)), InputType(2, NO_SEQUENCE, Index)
+    ]
+    converter = DataProviderConverter(input_types)
 
     #batch_size = trainer_config.opt_config.batch_size
     #trainer.startTrain()
