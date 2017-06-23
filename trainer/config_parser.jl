@@ -54,6 +54,7 @@ function Parameter(name,
 
     globals.g_config_funcs[string(Parameter)] = Parameter
 
+    globals.fillset(globals.g_config.model_config, :parameters)
     para = globals.ParameterConfig()
     globals.add_field!(globals.g_config.model_config, :parameters, para)
 
@@ -63,6 +64,7 @@ function Parameter(name,
       globals.set_field!(para, :device, device)
     end
 
+    globals.fillset(para, :dims)
     for dim in dims
       globals.add_field!(para, :dims, dim)
     end
@@ -156,6 +158,9 @@ end
 function Inputs(args)
   globals.g_config_funcs[string(Inputs)] = Inputs
 
+  globals.fillset(globals.g_current_submodel, :input_layer_names)
+  globals.fillset(globals.g_config.model_config, :input_layer_names)
+
   for name in args
     name = MakeLayerNameInSubmodel(name)
 
@@ -179,6 +184,10 @@ end
 
 function Outputs(args)
   globals.g_config_funcs[string(Outputs)] = Outputs
+
+  globals.fillset(globals.g_current_submodel, :output_layer_names)
+  globals.fillset(globals.g_config.model_config, :output_layer_names)
+  
   for name in args
 
     name = MakeLayerNameInSubmodel(name)
@@ -451,6 +460,9 @@ function Evaluator(
   globals.g_config_funcs[string(Evaluator)] = Evaluator
 
   evaluator = globals.EvaluatorConfig()
+
+  globals.fillset(globals.g_config.model_config, :evaluators)
+
   globals.add_field!(globals.g_config.model_config, :evaluators, evaluator)
 
   globals.set_field!(evaluator, :_type, etype)
@@ -460,6 +472,7 @@ function Evaluator(
     inputs = [inputs]
   end
 
+  globals.fillset(evaluator, :input_layers)
   for name in inputs
     globals.add_field!(evaluator, :input_layers, MakeLayerNameInSubmodel(name))
   end
@@ -469,6 +482,7 @@ function Evaluator(
     globals.set_field!(evaluator, :num_chunk_types, num_chunk_types)
   end
 
+  globals.fillset(globals.g_current_submodel, :evaluator_names)    
   globals.add_field!(globals.g_current_submodel, :evaluator_names, evaluator.name)
 
   if classification_threshold != nothing
@@ -495,6 +509,9 @@ function Evaluator(
   end
 
   if excluded_chunk_types != nothing
+
+    globals.fillset(globals.evaluator, :excluded_chunk_types)    
+
     for chunk in excluded_chunk_types
       globals.add_field!(globals.evaluator, :excluded_chunk_types, chunk)
     end
@@ -572,6 +589,7 @@ function parse_config(trainer_config, config_arg_str)
   #globals.g_root_submodel = globals.SubModelConfig()
   eval(globals, :(g_root_submodel = SubModelConfig()))
 
+  globals.fillset(globals.g_config.model_config, :sub_models)    
   globals.add_field!(globals.g_config.model_config, :sub_models, globals.g_root_submodel)
   globals.set_field!(globals.g_root_submodel, :name, "root")
   globals.set_field!(globals.g_root_submodel, :is_recurrent_layer_group, false)
@@ -613,6 +631,9 @@ function DataBase(async_load_data=false, constant_slots=nothing, data_ratio=1, i
   globals.set_field!(data_config, :async_load_data, async_load_data)
 
   if constant_slots != nothing
+
+    globals.fillset(data_config, :constant_slots)    
+
     for slot in constant_slots
       globals.add_field!(data_config, :constant_slots, slot)
     end
@@ -764,6 +785,8 @@ type LayerBase
 
 
     this.config = globals.LayerConfig()
+
+    globals.fillset(globals.g_config.model_config, :layers)    
     globals.add_field!(globals.g_config.model_config, :layers, this.config)
 
     globals.set_field!(this.config, :name, name)
@@ -809,6 +832,8 @@ type LayerBase
         end
       elseif isa(input, Operator)
         push!(this.operators, input)
+
+        globals.fillset(input.operator_conf, :input_indices)    
         globals.add_field!(input.operator_conf, :input_indices, input_index)
         input_config = Input(input.input_layer_name[1])
         input_layer_name = input_config.input_layer_name
@@ -818,6 +843,8 @@ type LayerBase
 
       # layer_input = self.config.inputs.add()
       layer_input = globals.LayerInputConfig()
+
+      globals.fillset(this.config, :inputs)    
       globals.add_field!(this.config, :inputs, layer_input)
 
       globals.set_field!(layer_input, :input_layer_name, input_config.input_layer_name)
@@ -829,6 +856,7 @@ type LayerBase
     globals.g_layer_map[name] = this.config
     #globals.g_current_submodel.layer_names.append(this.config.name)
 
+    globals.fillset(globals.g_current_submodel, :layer_names)    
     globals.add_field!(globals.g_current_submodel, :layer_names, this.config.name)
 
     if this.config._type != "data" && globals.g_pass_height_width
