@@ -34,3 +34,7 @@ end
 function sparse_binary_vector(dim, seq_type=NO_SEQUENCE)
     return InputType(dim, seq_type, SparseNonValue)
 end
+
+function integer_value(dim, seq_type=NO_SEQUENCE)
+    return InputType(dim, seq_type, Index)
+end

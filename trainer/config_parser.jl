@@ -126,7 +126,7 @@ function Parameter(name,
       if length(para.dims) != 0
         globals.set_field!(para, :initial_std, 1./sqrt(para.dims[1]))
       else
-        para.initial_std = 1. / math.sqrt(para.size)
+        globals.set_field!(para, :initial_std, 1./sqrt(para.size))
       end
     end
 
@@ -360,9 +360,8 @@ type Operator
 
     this = new()
     this._type = nothing
-    this.operator_conf = globals.OperatorConfig()
-    this.operator_conf._type = this._type
-
+    this.operator_conf = globals.OperatorConfig()  
+    globals.set_field(this.operator_conf, :_type, this._type)
     this.calc_output_size = function(input_size)
       return 0
     end
@@ -486,7 +485,6 @@ function Evaluator(
   globals.add_field!(globals.g_current_submodel, :evaluator_names, evaluator.name)
 
   if classification_threshold != nothing
-    evaluator.classification_threshold = classification_threshold
     globals.set_field!(evaluator, :classification_threshold, classification_threshold)
   end
   if positive_label != nothing
@@ -671,8 +669,8 @@ type LayerBase
       return globals.g_layer_map[this.config.inputs[input_index].input_layer_name]
     end
     this.set_layer_height_width = function(height, width)
-          this.config.height = height
-          this.config.width = width
+      globals.set_field(this.config,:height, height)
+      globals.set_field(this.config,:width, width)
     end
 
     this.create_input_parameter = function(input_index, size, dims=nothing, sparse=nothing, format=nothing)
@@ -817,7 +815,7 @@ type LayerBase
       input_config = nothing
       input_layer_name = ""
 
-      p_name = "_" * name * ".w" * string(input_index)
+      p_name = "_" * name * ".w" * string(input_index - 1)
       if isa(input, AbstractString)
           input_layer_name = input
           input_config = Input(

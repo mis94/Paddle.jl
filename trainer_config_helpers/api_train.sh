@@ -17,7 +17,7 @@
 # Note: if using trainer_config.emb.py, trainer_config.cnn.py
 # or trainer_config.lstm.py, you need to change --seq to --seq=1
 # because they are sequence models.
-julia api_train.jl trainer_config.lr.jl 2 15 0 0 data/train.txt data/test.txt data/dict.txt
+julia api_train.jl trainer_config.lr.jl 2 1 0 0 data/train.txt data/test.txt data/dict.txt
 
 # config
 # trainer_count
