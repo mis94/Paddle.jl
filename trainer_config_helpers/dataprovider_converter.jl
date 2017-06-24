@@ -46,7 +46,7 @@ type SparseBinaryScanner <: IScanner
     end
 end
 
-type IndexScanner
+type IndexScanner <: IScanner
     input_types
     pos
     __ids__
