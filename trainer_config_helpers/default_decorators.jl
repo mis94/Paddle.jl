@@ -33,9 +33,9 @@ function wrap_name_default(name, name_prefix)
     push!(_name_factories, factory)
 
     if isa(name, Void)
-        name = join([factory.name_prefix, factory.counter], "_")
+        name = "__" * join([factory.name_prefix, factory.counter], "_") * "__"
     else
-        name = join([name, factory.counter], "_")
+        name = "__" * join([name, factory.counter], "_") * "__"
     end
 
     factory.counter += 1
