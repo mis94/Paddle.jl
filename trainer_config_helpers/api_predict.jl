@@ -82,15 +82,16 @@ type QuickStartPrediction
             transform word into integer index according to the dictionary.
             """
             words = split(strip(data))
-            word_slot = [this.word_dict[w] for w in words if w in this.word_dict]
+
+            word_slot = [this.word_dict[w] for w in words if w in keys(this.word_dict)]
             return word_slot
         end
 
         this.batch_predict = function(data_batch)
 
-            input = this.converter(data_batch)
-            output = this.network.forwardTest(input)
-            prob = output[0]["id"]
+            input = this.converter.convert(data_batch)
+            output = this.network[:forwardTest](input)
+            prob = output[1]["id"]
             print("predicting labels is:")
             print(prob)
         end
@@ -125,11 +126,11 @@ type QuickStartPrediction
         #dict_file = dict
         #model_path = model
 
-        model= "output/model/pass-00001/"
-        config="trainer_config.lr.jl"
-        label="data/labels.list"
-        dict="data/dict.txt"
-        batch_size=20
+        model= ARGS[2]
+        config= ARGS[1]
+        label= ARGS[3]
+        dict= ARGS[4]
+        batch_size= parse(Int, ARGS[5])
 
 
         api.initPaddle("--use_gpu=0")
@@ -140,13 +141,23 @@ type QuickStartPrediction
 
 
         for line in eachline(STDIN)
-            label, text = line.split("\t")
-            labels.append!(Int(label))
-            batch.append!([predict.get_index(text)])
+            label, text = split(line, "\t")
+            append!(labels, parse(Int,label))
+            push!(batch, [predict.get_index(text)])
         end
+
+        #open(STDIN) do f
+        #    while !eof(STDIN)
+        #        line = readline(STDIN)
+        #        label, text = line.split("\t")
+        #        labels.append!(Int(label))
+        #        batch.append!([predict.get_index(text)])
+        #    end
+        #end
 
         println("labels is:")
         println(labels)
+
         predict.batch_predict(batch)
     end
 
