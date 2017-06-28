@@ -226,7 +226,7 @@ function fc_layer(input,
 
     Layer(name, "fc", kwargs)
 
-    return LayerOutput(name, "fc",parents=input, activation=act, size=size)
+    return LayerOutput(name, "fc", parents=input, activation=act, size=size)
 end
 
 function classification_cost(input,
@@ -291,5 +291,5 @@ function maxid_layer(input; name=nothing, layer_attr=nothing)
 
     l = Layer(name, "maxid", kwargs)
 
-    return LayerOutput(name=name, layer_type="maxid", parents=[input], size=l.config.size)
+    return LayerOutput(name, "maxid", parents=[input], size=l.config.size)
 end

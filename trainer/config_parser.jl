@@ -232,6 +232,16 @@ function Layer(name, layerType, kwargs)
     layerBase.create_bias_parameter(kwargs["bias"], layerBase.config.size)
   elseif layerType == "multi-class-cross-entropy"
     LayerBase(name, "multi-class-cross-entropy", 1, kwargs["inputs"], coeff=1.)
+  elseif layerType == "maxid"
+    layerbase = LayerBase(name, "maxid", 0, kwargs["inputs"], device=nothing)
+    for input_index in 1:length(layerbase.inputs)
+      input_layer = layerbase.get_input_layer(input_index)
+      layerBase.set_layer_size(input_layer.size)
+    end
+    if globals.has_field(globals.g_current_submodel, :generator)
+      globals.set_field(layerBase.config, :beam_size, globals.g_current_submodel.generator.beam_size)
+    end
+    return layerbase
   end
 
   #config_assert(layer_func, "layer type " * layerType * " not supported")
@@ -665,6 +675,7 @@ type LayerBase
 
   function LayerBase(name, Type, size, inputs; device=nothing, active_type="", drop_rate=0., coeff=nothing)
     this = new()
+
     this.get_input_layer = function(input_index)
       return globals.g_layer_map[this.config.inputs[input_index].input_layer_name]
     end
