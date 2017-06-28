@@ -74,5 +74,9 @@ if !is_predict
   cls = classification_cost(output, label)
 
   outputs(cls)
+else
+  
+  maxid = maxid_layer(output)
+  outputs([maxid, output])
 
 end
