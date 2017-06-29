@@ -17,7 +17,7 @@ set -e
 #Note the default model is pass-00002, you shold make sure the model path
 #exists or change the mode path.
 #only test on trainer_config.lr.py
-model=output/model/pass-00001/
+model=output/model/pass-00000/
 config=trainer_config.lr.jl
 label=data/labels.list
 dict=data/dict.txt

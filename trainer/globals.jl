@@ -10,6 +10,7 @@ module globals
   import Base.deepcopy
 
 
+  global_config_args = Dict()
   g_default_momentum=nothing
   g_default_decay_rate=nothing
   g_default_initial_mean=0.0
@@ -64,7 +65,8 @@ module globals
   submodel_map=Dict(),
   submodel_stack=[],
   add_submodel_suffix=false,
-  pass_height_width=true)
+  pass_height_width=true,
+  config_args = Dict())
 
     global g_default_momentum
     global g_default_decay_rate
@@ -89,7 +91,7 @@ module globals
     global g_submodel_stack
     global g_add_submodel_suffix
     global g_pass_height_width
-
+    global global_config_args 
   #Parameter Assignments
     g_default_momentum                     =deepcopy(default_momentum)
     g_default_decay_rate                   =deepcopy(default_decay_rate)
@@ -114,6 +116,8 @@ module globals
     g_submodel_stack                       =deepcopy(submodel_stack)
     g_add_submodel_suffix                  =deepcopy(add_submodel_suffix)
     g_pass_height_width                    =deepcopy(pass_height_width)
+    global_config_args                     =deepcopy(config_args)
+
   end
 
 
@@ -128,5 +132,9 @@ module globals
   function set_default_momentum(val)
     global g_default_momentum
     g_default_momentum = val
+  end
+  function set_config_args(val)
+    global global_config_args
+    global_config_args = val
   end
 end

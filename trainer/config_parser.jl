@@ -233,15 +233,15 @@ function Layer(name, layerType, kwargs)
   elseif layerType == "multi-class-cross-entropy"
     LayerBase(name, "multi-class-cross-entropy", 1, kwargs["inputs"], coeff=1.)
   elseif layerType == "maxid"
-    layerbase = LayerBase(name, "maxid", 0, kwargs["inputs"], device=nothing)
-    for input_index in 1:length(layerbase.inputs)
-      input_layer = layerbase.get_input_layer(input_index)
+    layerBase = LayerBase(name, "maxid", 0, kwargs["inputs"], device=nothing)
+    for input_index in 1:length(layerBase.inputs)
+      input_layer = layerBase.get_input_layer(input_index)
       layerBase.set_layer_size(input_layer.size)
     end
     if globals.has_field(globals.g_current_submodel, :generator)
       globals.set_field(layerBase.config, :beam_size, globals.g_current_submodel.generator.beam_size)
     end
-    return layerbase
+    return layerBase
   end
 
   #config_assert(layer_func, "layer type " * layerType * " not supported")
@@ -526,12 +526,9 @@ function Evaluator(
   end
 end
 
-global_config_args = Dict()
-
 function get_config_arg(name, Type, default=nothing)
-
   if Type == Bool
-    s = get(global_config_args, name, nothing)
+    s = get(globals.global_config_args, name, nothing)
     if s == nothing || s == false
       return default
     end
@@ -542,7 +539,7 @@ function get_config_arg(name, Type, default=nothing)
       return false
     end
   else
-    return Type(get(global_config_args, name, default))
+    return Type(get(globals.global_config_args, name, default))
   end
 end
 
@@ -604,9 +601,8 @@ function parse_config(trainer_config, config_arg_str)
 
   #globals.g_current_submodel = globals.g_root_submodel
   eval(globals, :(g_current_submodel = g_root_submodel))
-
-  global_config_args = config_args
-
+  #eval(globals, :(global_config_args = config_args))
+  globals.set_config_args(config_args)
   include(trainer_config) #execute the file
 
   return update_g_config()
@@ -672,13 +668,21 @@ type LayerBase
   set_layer_height_width::Function
   create_input_parameter::Function
   create_bias_parameter::Function
+  set_layer_size::Function
 
   function LayerBase(name, Type, size, inputs; device=nothing, active_type="", drop_rate=0., coeff=nothing)
     this = new()
 
+    this.set_layer_size = function(size)
+        if !globals.has_field(this.config, :size) || this.config.size == 0
+          globals.set_field!(this.config, :size, size)
+        end
+    end
+
     this.get_input_layer = function(input_index)
       return globals.g_layer_map[this.config.inputs[input_index].input_layer_name]
     end
+
     this.set_layer_height_width = function(height, width)
       globals.set_field(this.config,:height, height)
       globals.set_field(this.config,:width, width)

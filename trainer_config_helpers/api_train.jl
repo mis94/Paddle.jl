@@ -49,15 +49,15 @@ function parseArguments()
     global test_data = ARGS[7]
     global dict_file = ARGS[8]
     
-    println("=============================")
-    println( config )
-    println( trainer_count)
-    println( num_passes) 
-    println( use_gpu )
-    println( seq )
-    println( train_data )
-    println( test_data )
-    println( dict_file )
+    #println("=============================")
+    #println( config )
+    #println( trainer_count)
+    #println( num_passes) 
+    #println( use_gpu )
+    #println( seq )
+    #println( train_data )
+    #println( test_data )
+    #println( dict_file )
 end
 
 

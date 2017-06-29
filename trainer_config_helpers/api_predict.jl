@@ -41,8 +41,6 @@ type QuickStartPrediction
     function QuickStartPrediction(train_conf, dict_file; model_dir=nothing, label_file=nothing)
 
         this = new()
-        this.model_dir = nothing
-        this.label_file = nothing
 
         this.load_dict = function()
             """
@@ -92,8 +90,8 @@ type QuickStartPrediction
             input = this.converter.convert(data_batch)
             output = this.network[:forwardTest](input)
             prob = output[1]["id"]
-            print("predicting labels is:")
-            print(prob)
+            println("predicting labels is:")
+            println(prob)
         end
 
         this.train_conf = train_conf
@@ -101,14 +99,14 @@ type QuickStartPrediction
         this.word_dict = Dict()
         this.dict_dim = this.load_dict()
         this.model_dir = model_dir
-        this.label_file = label_file
 
         if model_dir == nothing
             this.model_dir = dirname(Base.source_path()) * train_conf
         end
 
-        if this.load_label != nothing
-            this.load_label(this.label_file)
+        this.label = nothing
+        if label_file != nothing
+            this.load_label(label_file)
         end
 
         conf = parse_config(train_conf, "is_predict=1")
@@ -120,47 +118,47 @@ type QuickStartPrediction
         return this
     end
 
-    function main()
+end
 
-        #train_conf = config
-        #dict_file = dict
-        #model_path = model
+function main()
 
-        model= ARGS[2]
-        config= ARGS[1]
-        label= ARGS[3]
-        dict= ARGS[4]
-        batch_size= parse(Int, ARGS[5])
+    #train_conf = config
+    #dict_file = dict
+    #model_path = model
 
-
-        api.initPaddle("--use_gpu=0")
-        predict = QuickStartPrediction(config, dict, model_dir=model, label_file=label)
-
-        batch = []
-        labels = []
+    config= ARGS[1]
+    model= ARGS[2]
+    label= ARGS[3]
+    dict= ARGS[4]
+    batch_size= parse(Int, ARGS[5])
 
 
-        for line in eachline(STDIN)
-            label, text = split(line, "\t")
-            append!(labels, parse(Int,label))
-            push!(batch, [predict.get_index(text)])
-        end
+    api.initPaddle("--use_gpu=0")
+    predict = QuickStartPrediction(config, dict, model_dir=model, label_file=label)
 
-        #open(STDIN) do f
-        #    while !eof(STDIN)
-        #        line = readline(STDIN)
-        #        label, text = line.split("\t")
-        #        labels.append!(Int(label))
-        #        batch.append!([predict.get_index(text)])
-        #    end
-        #end
+    batch = []
+    labels = []
 
-        println("labels is:")
-        println(labels)
 
-        predict.batch_predict(batch)
+    for line in eachline(STDIN)
+        label, text = split(line, "\t")
+        append!(labels, parse(Int,label))
+        push!(batch, [predict.get_index(text)])
     end
 
-    main()
-    
+    #open(STDIN) do f
+    #    while !eof(STDIN)
+    #        line = readline(STDIN)
+    #        label, text = line.split("\t")
+    #        labels.append!(Int(label))
+    #        batch.append!([predict.get_index(text)])
+    #    end
+    #end
+
+    println("labels is:")
+    println(labels)
+
+    predict.batch_predict(batch)
 end
+
+main()

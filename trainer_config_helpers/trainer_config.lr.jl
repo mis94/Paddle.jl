@@ -75,7 +75,6 @@ if !is_predict
 
   outputs(cls)
 else
-  
   maxid = maxid_layer(output)
   outputs([maxid, output])
 
