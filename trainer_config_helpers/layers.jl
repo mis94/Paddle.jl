@@ -290,8 +290,6 @@ function maxid_layer(input; name=nothing, layer_attr=nothing)
     merge!(kwargs, to_kwargs(layer_attr))
 
     l = Layer(name, "maxid", kwargs)
-    println("**********************************************************")
-    println(l.config.size)
-    println("**********************************************************")
+    
     return LayerOutput(name, "maxid", parents=[input], size=l.config.size)
 end
