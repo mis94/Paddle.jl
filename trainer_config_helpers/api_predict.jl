@@ -6,9 +6,7 @@ include("activations.jl")
 include("networks.jl")
 include("JlDataProvider.jl")
 include("dataprovider_converter.jl")
-
-using PyCall
-@pyimport py_paddle.swig_paddle as api
+include("api.jl")
 
 function parseProtoObject(path, obj)
  
@@ -38,9 +36,13 @@ type QuickStartPrediction
     get_index::Function
     batch_predict::Function
 
+    api_GradientMachine
+
     function QuickStartPrediction(train_conf, dict_file; model_dir=nothing, label_file=nothing)
 
         this = new()
+
+        this.api_GradientMachine = GradientMachine()
 
         this.load_dict = function()
             """
@@ -88,7 +90,7 @@ type QuickStartPrediction
         this.batch_predict = function(data_batch)
 
             input = this.converter.convert(data_batch)
-            output = this.network[:forwardTest](input)
+            output = this.api_GradientMachine.forwardTest(input)
             prob = output[1]["id"]
             println("predicting labels is:")
             println(prob)
@@ -110,8 +112,8 @@ type QuickStartPrediction
         end
 
         conf = parse_config(train_conf, "is_predict=1")
-        this.network = api.GradientMachine[:createFromConfigProto](parseProtoObject(dirname(Base.source_path()) * "/parser/api_predict/" * "model", conf.model_config))
-        this.network[:loadParameters](this.model_dir)
+        this.api_GradientMachine.createFromConfigProto(parseProtoObject(dirname(Base.source_path()) * "/parser/api_predict/" * "model", conf.model_config))
+        this.api_GradientMachine.loadParameters(this.model_dir)
         input_types = [sparse_binary_vector(this.dict_dim)] #check type 
         this.converter = DataProviderConverter(input_types)
 

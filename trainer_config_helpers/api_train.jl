@@ -7,9 +7,9 @@ include("networks.jl")
 include("JlDataProvider.jl")
 include("dataprovider_converter.jl")
 
+include("api.jl")
+
 using JSON
-using PyCall
-@pyimport py_paddle.swig_paddle as api
 
 
 #trainer_config = parse_config("../trainer_config_helpers/trainer_config.lr.jl", "dict_file=../trainer_config_helpers/data/dict.txt")
@@ -111,6 +111,9 @@ end
 
 function main()
 
+    api_GradientMachine = GradientMachine()
+    api_trainer = Trainer()
+
     parseArguments()
 
     api.initPaddle("--use_gpu=" * string(use_gpu), "--trainer_count=" * string(trainer_count))
@@ -120,8 +123,6 @@ function main()
     test_dataset = nothing
     if test_data != nothing
         test_dataset = load_data(test_data, word_dict)
-    else
-        test_dataset = nothing
     end
     
     trainer_config = parse_config(config, "dict_file=" * dict_file)
@@ -132,11 +133,10 @@ function main()
 
     #println(trainer_config.model_config)
     #println("===================================================================")
+    model = api_GradientMachine.createFromConfigProto(parseProtoObject(dirname(Base.source_path()) * "/parser/api_train/" * "model", trainer_config.model_config))
 
-    model = api.GradientMachine[:createFromConfigProto](parseProtoObject(dirname(Base.source_path()) * "/parser/api_train/" * "model", trainer_config.model_config))
-    
     ### create a trainer for the gradient machine
-    trainer = api.Trainer[:create](parseProtoObject(dirname(Base.source_path()) * "/parser/api_train/" * "trainer", trainer_config), model)
+    trainer = api_trainer.create(parseProtoObject(dirname(Base.source_path()) * "/parser/api_train/" * "trainer", trainer_config), model)
 
     input_types = nothing
     #global seq
@@ -151,30 +151,30 @@ function main()
     converter = DataProviderConverter(input_types)
 
     batch_size = trainer_config.opt_config.batch_size
-    trainer[:startTrain]()
+    api_trainer.startTrain()
 
     for train_pass in 1:num_passes
-        trainer[:startTrainPass]()
+        api_trainer.startTrainPass()
         shuffle(train_dataset)
         for pos in collect(1: batch_size: length(train_dataset))
             size = min(batch_size, length(train_dataset) - pos)
             batch = train_dataset[pos: pos + size - 1]
-            trainer[:trainOneDataBatch](size, converter.convert(batch))
+            api_trainer.trainOneDataBatch(size, converter.convert(batch))
         end
-        trainer[:finishTrainPass]()
+        api_trainer.finishTrainPass()
         
         if test_dataset != nothing
-            trainer[:startTestPeriod]()
+            api_trainer.startTestPeriod()
             for pos in collect(1: batch_size: length(test_dataset))
                 size = min(batch_size, length(test_dataset) - pos)
                 batch = test_dataset[pos: pos + size - 1 ]
-                trainer[:testOneDataBatch](size, converter.convert(batch))
+                api_trainer.testOneDataBatch(size,converter.convert(batch))
 
             end
-            trainer[:finishTestPeriod]()
+            api_trainer.finishTestPeriod()
         end
     end
-    trainer[:finishTrain]()
+    api_trainer.finishTrain()
 
     #println(trainer)
     

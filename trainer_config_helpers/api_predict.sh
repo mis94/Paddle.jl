@@ -22,7 +22,7 @@ config=trainer_config.lr.jl
 label=data/labels.list
 dict=data/dict.txt
 batch_size=20
-sudo head -n$batch_size data/test.txt | julia api_predict.jl \
+head -n$batch_size data/test.txt | julia api_predict.jl \
      $config\
      $model \
      $label \
